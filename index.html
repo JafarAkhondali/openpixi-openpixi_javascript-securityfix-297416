@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html>
+
+<script type = "text/javascript" src="threejs/build/three.min.js"></script>
+<script type = "text/javascript" src="scripts/OrbitControls.js"></script>
+<script type="text/javascript" src="scripts/Detector.js"></script>
+
+<script type = "text/javascript" src="scripts/stats.js/build/stats.min.js"></script>
+<script type="text/javascript" src="scripts/dat.gui.min.js"></script>
+
+<script type="text/javascript" src="main.js"></script>
+<script type="text/javascript" src="simulator.js"></script>
+
+
+<head>
+    <title>Openpixi</title>
+</head>
+<body>
+<!--begin shaders-->
+
+<!-- pass through shaders -->
+<script id="passThruVertexShader" type="x-shader/x-vertex">
+
+			void main()	{
+
+				gl_Position = vec4( position, 1.0 );
+
+			}
+
+		</script>
+
+<script id="passThruFragmentShader" type="x-shader/x-fragment">
+
+			uniform vec2 resolution;
+			uniform sampler2D texture;
+
+			void main()	{
+
+				vec2 uv = gl_FragCoord.xy / resolution.xy;
+
+				vec3 color = texture2D( texture, uv ).xyz;
+
+				gl_FragColor=vec4(color, 1.0);
+
+			}
+
+		</script>
+<!-- end pass through shaders -->
+
+<!--particle acceleration, position and velocity shaders -->
+<script id="fragmentShaderPosition" type="x-shader/x-fragment">
+
+			uniform vec2 resolution;
+			uniform float dt; //FIXME
+			uniform sampler2D textureVelocity;
+			uniform sampler2D texturePosition;
+
+
+
+			void main()	{
+
+
+				vec2 uv = gl_FragCoord.xy / resolution.xy;
+
+				vec3 position = texture2D( texturePosition, uv ).xyz;
+
+				vec3 velocity = texture2D( textureVelocity, uv ).xyz;
+
+				gl_FragColor=vec4(position + velocity , 1.0);
+
+			}
+
+		</script>
+
+
+<script id="fragmentShaderVelocity" type="x-shader/x-fragment">
+
+			uniform vec2 resolution;
+			uniform float dt; //FIXME
+			uniform sampler2D textureVelocity;
+			uniform sampler2D texturePosition;
+			uniform sampler2D textureAcceleration;
+
+			const float UPPER_BOUNDS = 200.0;
+			const float LOWER_BOUNDS = -UPPER_BOUNDS;
+
+			const float bouncy = 1.0;
+
+
+			void main()	{
+
+				vec2 uv = gl_FragCoord.xy / resolution.xy;
+
+
+
+				vec3 oldPosition = texture2D( texturePosition, uv ).xyz;
+				vec3 oldVelocity = texture2D( textureVelocity, uv ).xyz;
+				vec3 acceleration = texture2D( textureAcceleration, uv).xyz;
+
+
+				vec3 velocity=oldVelocity+acceleration;
+
+                //bounding box
+
+                if ((oldPosition.x + velocity.x ) < LOWER_BOUNDS) velocity.x = -velocity.x*bouncy;
+				if ((oldPosition.y + velocity.y ) < LOWER_BOUNDS) velocity.y = -velocity.y*bouncy;
+				if ((oldPosition.z + velocity.z ) < LOWER_BOUNDS) velocity.z = -velocity.z*bouncy;
+
+				if ((oldPosition.x + velocity.x ) > UPPER_BOUNDS) velocity.x = -velocity.x*bouncy;
+				if ((oldPosition.y + velocity.y ) > UPPER_BOUNDS) velocity.y = -velocity.y*bouncy;
+				if ((oldPosition.z + velocity.z ) > UPPER_BOUNDS) velocity.z = -velocity.z*bouncy;
+
+
+
+				gl_FragColor=vec4(velocity, 1.0);
+
+			}
+
+		</script>
+
+<script id="fragmentShaderAcceleration" type="x-shader/x-fragment">
+
+
+            uniform vec2 resolution;
+            uniform float dt;//FIXME
+			uniform sampler2D textureVelocity;
+			uniform sampler2D textureMQ;
+            float gy;
+
+            uniform float size;
+            uniform sampler2D textureFieldPos;
+            uniform sampler2D textureFieldB;
+            uniform sampler2D textureFieldE;
+            uniform sampler2D texturePosition;
+
+            uniform sampler2D textureField;
+
+            const float drag = 0.0005;
+
+
+
+            void main()	{
+                gy = 0.0;//0.05;
+				vec2 uv = gl_FragCoord.xy / resolution.xy;
+
+                //look up closest field point
+                //linear map z from coordrange to [0,arraysize-1]
+                float maxval = 400.0; //FIXME: particles coords between -200 and 200, add uniform
+                vec3 pos = texture2D(texturePosition,uv).xyz;
+
+                //map particles position  to [0,size-1]
+                float x = ((pos.x+maxval/2.0)/maxval)*(size-1.0);
+                float y = ((pos.y+maxval/2.0)/maxval)*(size-1.0);
+                float z = ((pos.z+maxval/2.0)/maxval)*(size-1.0);
+
+                //now round to nearest fp
+                highp int lx = int(floor(0.5+x));
+                highp int ly = int(floor(0.5+y));
+                highp int lz = int(floor(0.5+z));
+                highp int lsize = int(size);//FIXME make uniform integer
+
+                highp int width = int(ceil(sqrt(size)));
+
+                //FIXME lookup for quadratic field textures, TBD
+                highp int row = int(floor(float(lz)/float(width)));//the row of the tile
+                highp int col = int(mod(float(lz),float(width)));//the column of the tile
+
+                highp int qu = col*lsize+lx;
+                highp int qv = row*lsize+ly;
+
+                vec2 quv = vec2(qu,qv)/vec2(lsize*width,lsize*width);
+                vec3 qE = texture2D(textureField,quv).xyz;
+
+
+
+                highp int fu =  (lsize*lz+lx);
+                highp int fv = ly;
+
+                //lookup along width is then size*fpoint.z+fpoint.x,
+                //lookup along height is fpoint.y
+                //fpoint is the closest field point to our position
+
+                vec2 fuv =  vec2(fu,fv)/vec2(pow(size,2.0),size);
+
+                vec3 B = texture2D(textureFieldB,fuv).xyz;
+                vec3 E = texture2D(textureFieldE,fuv).xyz;
+
+                float q = texture2D(textureMQ,uv).y;
+                float m = texture2D(textureMQ,uv).x;
+
+                vec3 v = texture2D(textureVelocity,uv).xyz;
+                vec3 acceleration =  -drag * v + -m*gy + (q/m*(E+cross(v,B)));
+
+
+				gl_FragColor=vec4(acceleration,1.0);
+
+
+				}
+
+
+
+</script>
+
+<script id="fragmentShaderFieldE" type="x-shader/x-fragment">
+
+           //FIXME TBD
+
+           uniform sampler2D textureE;
+           uniform sampler2D textureB;
+           uniform float dt;
+           uniform float size;
+           uniform vec2 resolution;
+
+           void main(){
+
+           vec2 uv = gl_Fr1agCoord.xy/resolution.xy;
+           vec3 color = texture2D( textureE, uv ).xyz;
+
+
+            gl_FragColor=vec4(color, 1.0);
+
+           }
+
+
+
+</script>
+
+<script id="fragmentShaderFieldB" type="x-shader/x-fragment">
+            //FIXME TBD
+
+           uniform sampler2D textureE;
+
+
+
+
+
+
+</script>
+
+<!-- end  position and velocity shaders -->
+
+<!--particle shaders-->
+
+<script id="particleVertexShader" type="x-shader/x-fragment">
+
+     uniform sampler2D lookup;
+     uniform float size;
+     uniform float scale;
+
+        void main() {
+
+            vec2 lookupuv = position.xy ;
+            vec3 pos = texture2D( lookup, lookupuv ).rgb;
+            vec4 mvPosition = modelViewMatrix * vec4( pos, 1.0 );
+            gl_PointSize  = 1.5;
+            gl_Position = projectionMatrix * mvPosition;
+
+}
+
+</script>
+
+
+<script id="particleFragmentShader" type="x-shader/x-fragment">
+
+                uniform vec3 psColor;
+                uniform float opacity;
+                void main() {
+                gl_FragColor = vec4( 1.0,1.0,1.0, opacity );
+                }
+</script>
+
+<!--end particle shaders-->
+
+<!--end shaders-->
+
+<!-- global variables -->
+
+<script type="text/javascript">
+
+    //check if WebGL is supported
+    if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+
+
+    //texture debug
+    var cameraTex, sceneTex;
+    var dispTex = false;
+    sceneTex = new THREE.Scene();
+    cameraTex = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 10000 );
+
+    //global variables
+    var WIDTH = 1024; //1024^2 = 1048576 particles maximum //FIXME this could be sized according to actual num of particles
+    var BOUNDS = 400; //Particle coordinates range from -bounds/2 to bounds/2
+    var DT = 1; //delta time
+    var FSIZE; //FIXME
+    var B;
+    var E;
+
+    var FXY,FZ;
+
+    var container, camera, scene, renderer; //main scene
+
+    var particles, material, geometry; //the particle system
+
+    var uniforms; //uniforms for the particle system's shader
+
+    var simul; //the simulator updates the particles' positions
+
+
+    //three.js
+    container = document.createElement( 'div' );
+    document.body.appendChild( container );
+
+    renderer = new THREE.WebGLRenderer();
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    container.appendChild( renderer.domElement );
+
+    camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 10000 );
+    camera.position.z = 400;
+
+    //controls
+    var controls = new THREE.OrbitControls( camera, renderer.domElement ); //FIXME: belongs into index
+
+
+    //gui
+    var text;
+
+    var guitext = function(){
+        this.gy = 0.0;
+        this.Particles = 100;
+        this.fieldpoints =5;
+
+        this.Bx = 0.0;
+        this.By = 0.0;
+        this.Bz = 0.0;
+
+        this.Ex = 0.0;
+        this.Ey = 0.0;
+        this.Ez = 0.0;
+
+        this.m = 0.000;
+        this.q = 0.0;
+    }
+
+
+    text = new guitext();
+    var gui = new dat.GUI({autoPlace: true});
+    var f1 = gui.addFolder('B');
+    var f2 = gui.addFolder('E');
+
+
+
+    gui.add(text, 'Particles',1,10000);
+    gui.add(text,'fieldpoints',2,16).step(1);
+    gui.add(text, 'gy',-0.9999,0.9999);
+
+    gui.add(text,'m',0.0,1.0);
+    gui.add(text,'q',-1.0,1.0);
+
+    f1.add(text,'Bx',-0.1,0.1);
+    f1.add(text,'By',-0.1,0.1);
+    f1.add(text,'Bz',-0.1,0.1);
+
+    f2.add(text,'Ex',-0.1,0.1);
+    f2.add(text,'Ey',-0.1,0.1);
+    f2.add(text,'Ez',-0.1,0.1);
+
+
+
+
+    var obj = {reset: function(){init()}};
+    gui.add(obj,'reset');
+
+    var inf = {info: function(){//FIXME
+        alert('left-click to move camera, \nhold mousewheel to zoom,\n click reset to apply changes')}};
+
+    gui.add(inf,'info');
+
+   /* var debug= {debug: function(){
+        dispTex = !dispTex;
+    }}
+    gui.add(debug,'debug');*/
+
+    //end gui
+
+    //stats
+
+    var stats = new Stats();
+    stats.domElement.style.position = 'absolute';
+    stats.domElement.style.top = '0px';
+    document.body.appendChild( stats.domElement );
+
+    //end stats
+
+
+
+    //start simulation
+
+    init();
+
+
+
+
+</script>
+
+</body>
+
+</html>
