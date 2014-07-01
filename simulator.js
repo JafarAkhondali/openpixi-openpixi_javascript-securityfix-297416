@@ -16,6 +16,8 @@ function simulator(width,renderer){
         return;
     }
 
+
+
     //off screen scene - ping pong scene
     var ppscene = new THREE.Scene();
     var mesh = new THREE.Mesh( new THREE.PlaneGeometry(2,2));
@@ -45,7 +47,7 @@ function simulator(width,renderer){
 
     } );
 
-    //var mesh = new THREE.Mesh( new THREE.PlaneGeometry( 2, 2 ), material );
+    //particle shaders
     var positionShader = new THREE.ShaderMaterial( {
 
         uniforms: {
@@ -91,8 +93,8 @@ function simulator(width,renderer){
             textureFieldB: {type: "t", value: null},
             textureFieldE: {type: "t", value: null},
             texturePosition: {type: "t", value: null},
-            size: {type: "f", value:null},
-            textureField : {type: "t",value:null}
+            size: {type: "f", value:null}
+
 
 
         },
@@ -103,16 +105,40 @@ function simulator(width,renderer){
 
     });
 
+
+    //field shaders
+    var w = Math.ceil(Math.sqrt(FSIZE));
+    var res = new THREE.Vector2(w*FSIZE,w*FSIZE);
+
+    var ppsceneF = new THREE.Scene();
+    var meshF = new THREE.Mesh( new THREE.PlaneGeometry(2,2));
+
+    ppsceneF.add( meshF );
+
     var fieldEShader = new THREE.ShaderMaterial({
         uniforms: {
             dt : { type: "f",value: DT},
-            resolution: {type: "v2",value: new THREE.Vector2(Math.pow(FSIZE,2),FSIZE)},
+            resolution: {type: "v2",value: res},
             size: {type: "f",value: FSIZE},
-            textureFieldE:{type: "tv",value:null}
+            textureFieldE:{type: "t",value :null},
+            textureFieldB:{type: "t",value :null}
 
         },
         vertexShader: document.getElementById('passThruVertexShader').textContent,
         fragmentShader: document.getElementById('fragmentShaderFieldE').textContent
+    });
+
+    var fieldBShader = new THREE.ShaderMaterial({
+        uniforms: {
+            dt : { type: "f",value: DT},
+            resolution: {type: "v2",value: res},
+            size: {type: "f",value: FSIZE},
+            textureFieldE:{type: "t",value :null},
+            textureFieldB:{type: "t",value :null}
+
+        },
+        vertexShader: document.getElementById('passThruVertexShader').textContent,
+        fragmentShader: document.getElementById('fragmentShaderFieldB').textContent
     });
 
 
@@ -120,9 +146,9 @@ function simulator(width,renderer){
 
     var pingpong = true;
     var rtPosition1, rtPosition2, rtVelocity1, rtVelocity2, rtAcceleration1, rtAcceleration2,rtMassCharge;
-    var fieldPos,rtfieldB1,rtfieldB2,rtfieldE1,rtfieldE2;   //FIXME
+    var rtfieldB1,rtfieldB2,rtfieldE1,rtfieldE2;   //FIXME
 
-    var rtfieldtest;
+
 
     this.init = function(){
 
@@ -132,9 +158,6 @@ function simulator(width,renderer){
         var dtMassCharge = generateMQTexture();
 
 
-        var dtFieldPos = generateFieldPosTexture(FSIZE);
-        var dtFieldB = generateFieldBTexture(FSIZE);
-        var dtFieldE = generateFieldETexture(FSIZE);
 
         //particles
         //for ping pong buffering
@@ -164,32 +187,26 @@ function simulator(width,renderer){
         renderTexture(res,dtMassCharge, rtMassCharge);
         //field
 
-        fieldPos = getRenderTarget(Math.pow(FSIZE,2), FSIZE);
 
-        rtfieldB1 = fieldPos.clone();
-        rtfieldB2 = fieldPos.clone();
+        var dtfieldE = generateFieldTex(new THREE.Vector3(E.x, E.y, E.z));
+        var dtfieldB = generateFieldTex(new THREE.Vector3(B.x, B.y, B.z));
+        //var dtfieldB = generateFieldTex(new THREE.Vector3(1, 0, 0));//FIXME DEBUG
 
-        rtfieldE1 = fieldPos.clone();
-        rtfieldE2 = fieldPos.clone();
 
-        res = new THREE.Vector2(Math.pow(FSIZE,2),FSIZE);
-        renderTexture(res,dtFieldPos,fieldPos);
+        var w = Math.ceil(Math.sqrt(FSIZE));
 
-        renderTexture(res,dtFieldB, rtfieldB1);
-        renderTexture(res,dtFieldB, rtfieldB2);
+        rtfieldE1 = getRenderTarget(FSIZE*w,FSIZE*w);
+        rtfieldE2 = rtfieldE1.clone();
 
-        renderTexture(res,dtFieldE,rtfieldE1);
-        renderTexture(res,dtFieldE,rtfieldE2);
+        renderTexture(new THREE.Vector2(FSIZE*w,FSIZE*w),dtfieldE,rtfieldE1);
+        renderTexture(new THREE.Vector2(FSIZE*w,FSIZE*w),dtfieldE,rtfieldE2);
 
-        //showTex(rtfieldE1);
+        rtfieldB1 = getRenderTarget(FSIZE*w,FSIZE*w);
+        rtfieldB2 = rtfieldB1.clone();
 
-        //FIXME TBD
-        //fieldtest
-        var dtfieldtest = generateFieldTex(new THREE.Vector3(0, 1, 0));
-        rtfieldtest = getRenderTarget(FSIZE*3,FSIZE*3);
-        renderTexture(new THREE.Vector2(FSIZE*3,FSIZE*3),dtfieldtest,rtfieldtest);
-        showTex(rtfieldtest);
-
+        renderTexture(new THREE.Vector2(FSIZE*w,FSIZE*w),dtfieldB,rtfieldB1);
+        renderTexture(new THREE.Vector2(FSIZE*w,FSIZE*w),dtfieldB,rtfieldB2);
+        showTex(rtfieldB1);
 
     }
 
@@ -200,15 +217,24 @@ function simulator(width,renderer){
         if(pingpong){
 
 
+
+
             renderAcceleration(rtPosition1,rtVelocity1, rtAcceleration1,rtfieldB1,rtfieldE1, rtAcceleration2);
             renderVelocity(rtPosition1,rtAcceleration1, rtVelocity1, rtVelocity2);
             renderPosition(rtPosition1, rtVelocity1, rtPosition2);
 
+            renderFieldE(rtfieldB1,rtfieldE1,rtfieldE2);
+            renderFieldB(rtfieldB1,rtfieldE1,rtfieldB2);
+
 
         } else {
+
             renderAcceleration(rtPosition2,rtVelocity2, rtAcceleration2,rtfieldB2,rtfieldE2, rtAcceleration1);
             renderVelocity(rtPosition2,rtAcceleration2, rtVelocity2, rtVelocity1);
             renderPosition(rtPosition2, rtVelocity2, rtPosition1);
+
+            renderFieldE(rtfieldB2,rtfieldE2,rtfieldE1);
+            renderFieldB(rtfieldB2,rtfieldE2,rtfieldB1);
 
         }
 
@@ -237,20 +263,41 @@ function simulator(width,renderer){
         renderer.render(ppscene, camera, output);
     }
     //render to texture using AccelerationShader
-
     function renderAcceleration(position, velocity, acceleration,fieldB,fieldE, output){
 
         mesh.material = accelerationShader;
         accelerationShader.uniforms.texturePosition.value = position;
         accelerationShader.uniforms.textureVelocity.value = velocity;
         accelerationShader.uniforms.textureAcceleration.value = acceleration;
-        accelerationShader.uniforms.textureFieldPos.value = fieldPos;
         accelerationShader.uniforms.textureFieldB.value = fieldB;
         accelerationShader.uniforms.textureFieldE.value = fieldE;
         accelerationShader.uniforms.size.value = FSIZE;
         accelerationShader.uniforms.textureMQ.value = rtMassCharge;
-        accelerationShader.uniforms.textureField.value = rtfieldtest; //FIXME
+
         renderer.render(ppscene,camera,output);
+
+    }
+
+    //render to texture using FieldE shader
+    function renderFieldE(fieldB,fieldE,output){
+
+        meshF.material = fieldEShader;
+
+        fieldEShader.uniforms.textureFieldE.value = fieldE;
+        fieldEShader.uniforms.textureFieldB.value = fieldB;
+
+        renderer.render(ppsceneF,camera,output);
+    }
+
+    //render to texture using FieldB shader
+    function renderFieldB(fieldB,fieldE,output){
+
+        meshF.material = fieldBShader;
+
+        fieldBShader.uniforms.textureFieldE.value = fieldE;
+        fieldBShader.uniforms.textureFieldB.value = fieldB;
+
+        renderer.render(ppsceneF,camera,output);
 
     }
 
@@ -374,146 +421,6 @@ function simulator(width,renderer){
     //texture generators - field
 
 
-
-
-    function generateFieldPosTexture(size) { //FIXME
-
-        var x, y, z;
-
-
-       var numpoints=Math.pow(size,3); //number of field points
-        var height=size;
-        var width=Math.pow(size,2);
-
-        var a = new Float32Array(numpoints *4);
-
-        for (var k = 0; k < numpoints; k++) {
-
-
-            x = Math.random()-0.5;
-            y = Math.random()-0.5;
-            z = Math.random()-0.5;
-
-            a[ k*4 + 0 ] = x;
-            a[ k*4 + 1 ] = y ;
-            a[ k*4 + 2 ] = z;
-            a[ k*4 + 3 ] = 1;
-
-        }
-
-        var texture = new THREE.DataTexture( a, width, height, THREE.RGBAFormat, THREE.FloatType );  //height*width must be <a.length
-        texture.minFilter = THREE.NearestFilter;
-        texture.magFilter = THREE.NearestFilter;
-        texture.needsUpdate = true;
-        texture.flipY = false;
-
-
-        return texture;
-
-    }
-
-    function generateFieldBTexture(size){
-
-        var bx,by,bz;
-        bx= B.x;
-        by= B.y;
-        bz= B.z;
-
-        var numpoints=Math.pow(size,3); //number of field points
-        var height=size;
-        var width=Math.pow(size,2);
-        var a = new Float32Array(numpoints*4);
-
-        for (var k = 0; k < numpoints; k++) {
-
-
-
-
-            a[ k*4 + 0 ] = bx;
-            a[ k*4 + 1 ] = by;
-            a[ k*4 + 2 ] = bz;
-            a[ k*4 + 3 ] = 1;
-
-        }
-
-
-
-
-
-
-
-        var texture = new THREE.DataTexture( a, width, height, THREE.RGBAFormat, THREE.FloatType );
-        texture.minFilter = THREE.NearestFilter;
-        texture.magFilter = THREE.NearestFilter;
-        texture.needsUpdate = true;
-        texture.flipY = false;
-
-
-        return texture;
-    }
-
-    function generateFieldETexture(size){
-
-        var ex,ey,ez;
-
-        ex = E.x;
-        ey = E.y;
-        ez = E.z;
-
-        var numpoints=Math.pow(size,3); //number of field points
-        var height=size;
-        var width=Math.pow(size,2);
-        var a = new Float32Array(numpoints *4);
-
-
-
-        for (var k = 0; k < numpoints; k++) {
-
-
-
-
-            a[ k*4 + 0 ] = ex;
-            a[ k*4 + 1 ] = ey;
-            a[ k*4 + 2 ] = ez;
-            a[ k*4 + 3 ] = 1;
-
-        }
-
-
-        //debug: use only half of the field points
-         /*for(var k = 0;k<Math.floor(numpoints/2);k++){
-
-
-
-
-         a[ k*4 + 0 ] = 0;
-         a[ k*4 + 1 ] = 0;
-         a[ k*4 + 2 ] = 0;
-         a[ k*4 + 3 ] = 1;
-
-         }
-         for(var k = Math.floor(numpoints/2);k<numpoints;k++){
-
-         a[ k*4 + 0 ] = ex;
-         a[ k*4 + 1 ] = ey ;
-         a[ k*4 + 2 ] = ez;
-         a[ k*4 + 3 ] = 1;
-
-
-         }*/
-
-
-
-        var texture = new THREE.DataTexture( a, width, height, THREE.RGBAFormat, THREE.FloatType );
-        texture.minFilter = THREE.NearestFilter;
-        texture.magFilter = THREE.NearestFilter;
-        texture.needsUpdate = true;
-        texture.flipY = false;
-
-
-        return texture;
-    }
-
     function generateMQTexture(){
 
         var m,q;
@@ -550,14 +457,13 @@ function simulator(width,renderer){
 
     function generateFieldTex(vec){
     //generates quadratic texture for field lookup
-    //FIXME TBD
+
 
         var width = Math.ceil(Math.sqrt(FSIZE)); //number of FSIZExFSIZE tiles per row/column
         var texsize = width*FSIZE*width*FSIZE;
 
         var a = new Float32Array(texsize*4);
 
-        var numpoints = Math.pow(FSIZE,3);
         var filled = FSIZE*FSIZE*width*Math.floor(FSIZE/width);
 
         //completely filled rows
@@ -599,22 +505,6 @@ function simulator(width,renderer){
 
         }
 
-        var s = a.length;
-        var l = FSIZE*width;//texture width in pixel
-        var b = new Float32Array(s);
-        var t = new Float32Array(l*4);
-
-        for(var j=0;j < l; j++){ //number of rows
-
-            t= a.subarray(j*l*4,(j*l+l)*4);
-
-            for( var i =0;i< (l*4); i++ ){
-                b[s-(j+1)*l*4+i]=a[j*l*4+i];
-
-            }
-
-
-        }
 
         var texture = new THREE.DataTexture(a, width*FSIZE, width*FSIZE, THREE.RGBAFormat, THREE.FloatType );
         texture.minFilter = THREE.NearestFilter;
@@ -629,7 +519,7 @@ function simulator(width,renderer){
 
     //debug
     function showTex(textureToDisplay) {
-        console.log(textureToDisplay);
+
         var geometry = new THREE.PlaneGeometry(textureToDisplay.width,textureToDisplay.height);
 
         var material = new THREE.MeshBasicMaterial({map: textureToDisplay});

@@ -55,7 +55,8 @@
 			uniform sampler2D textureVelocity;
 			uniform sampler2D texturePosition;
 
-
+            const float UPPER_BOUNDS = 200.0;
+			const float LOWER_BOUNDS = -UPPER_BOUNDS;
 
 			void main()	{
 
@@ -65,6 +66,15 @@
 				vec3 position = texture2D( texturePosition, uv ).xyz;
 
 				vec3 velocity = texture2D( textureVelocity, uv ).xyz;
+
+				//periodic boundary box:
+				if ((position.x + velocity.x ) < LOWER_BOUNDS) position.x += UPPER_BOUNDS*2.0;
+				if ((position.y + velocity.y ) < LOWER_BOUNDS) position.y += UPPER_BOUNDS*2.0;
+				if ((position.z + velocity.z ) < LOWER_BOUNDS) position.z += UPPER_BOUNDS*2.0;
+
+				if ((position.x + velocity.x ) > UPPER_BOUNDS) position.x -= UPPER_BOUNDS*2.0;
+				if ((position.y + velocity.y ) > UPPER_BOUNDS) position.y -= UPPER_BOUNDS*2.0;
+				if ((position.z + velocity.z ) > UPPER_BOUNDS) position.z -= UPPER_BOUNDS*2.0;
 
 				gl_FragColor=vec4(position + velocity , 1.0);
 
@@ -101,15 +111,17 @@
 				vec3 velocity=oldVelocity+acceleration;
 
                 //bounding box
+                //wall
+                // if ((oldPosition.x + velocity.x ) < LOWER_BOUNDS) velocity.x = -velocity.x*bouncy;
+				//if ((oldPosition.y + velocity.y ) < LOWER_BOUNDS) velocity.y = -velocity.y*bouncy;
+				//if ((oldPosition.z + velocity.z ) < LOWER_BOUNDS) velocity.z = -velocity.z*bouncy;
 
-                if ((oldPosition.x + velocity.x ) < LOWER_BOUNDS) velocity.x = -velocity.x*bouncy;
-				if ((oldPosition.y + velocity.y ) < LOWER_BOUNDS) velocity.y = -velocity.y*bouncy;
-				if ((oldPosition.z + velocity.z ) < LOWER_BOUNDS) velocity.z = -velocity.z*bouncy;
+				//if ((oldPosition.x + velocity.x ) > UPPER_BOUNDS) velocity.x = -velocity.x*bouncy;
+				//if ((oldPosition.y + velocity.y ) > UPPER_BOUNDS) velocity.y = -velocity.y*bouncy;
+				//if ((oldPosition.z + velocity.z ) > UPPER_BOUNDS) velocity.z = -velocity.z*bouncy;
 
-				if ((oldPosition.x + velocity.x ) > UPPER_BOUNDS) velocity.x = -velocity.x*bouncy;
-				if ((oldPosition.y + velocity.y ) > UPPER_BOUNDS) velocity.y = -velocity.y*bouncy;
-				if ((oldPosition.z + velocity.z ) > UPPER_BOUNDS) velocity.z = -velocity.z*bouncy;
-
+                //periodic
+                //do not change velocity
 
 
 				gl_FragColor=vec4(velocity, 1.0);
@@ -128,7 +140,7 @@
             float gy;
 
             uniform float size;
-            uniform sampler2D textureFieldPos;
+
             uniform sampler2D textureFieldB;
             uniform sampler2D textureFieldE;
             uniform sampler2D texturePosition;
@@ -159,31 +171,22 @@
                 highp int lz = int(floor(0.5+z));
                 highp int lsize = int(size);//FIXME make uniform integer
 
+
+                //number of tiles
                 highp int width = int(ceil(sqrt(size)));
 
-                //FIXME lookup for quadratic field textures, TBD
-                highp int row = int(floor(float(lz)/float(width)));//the row of the tile
+                //lookup
+                highp int row = int(floor(float(lz)/float(width)));//the row of the tile //int division ~rundung
                 highp int col = int(mod(float(lz),float(width)));//the column of the tile
 
                 highp int qu = col*lsize+lx;
                 highp int qv = row*lsize+ly;
 
                 vec2 quv = vec2(qu,qv)/vec2(lsize*width,lsize*width);
-                vec3 qE = texture2D(textureField,quv).xyz;
 
 
-
-                highp int fu =  (lsize*lz+lx);
-                highp int fv = ly;
-
-                //lookup along width is then size*fpoint.z+fpoint.x,
-                //lookup along height is fpoint.y
-                //fpoint is the closest field point to our position
-
-                vec2 fuv =  vec2(fu,fv)/vec2(pow(size,2.0),size);
-
-                vec3 B = texture2D(textureFieldB,fuv).xyz;
-                vec3 E = texture2D(textureFieldE,fuv).xyz;
+                vec3 B = texture2D(textureFieldB,quv).xyz;
+                vec3 E = texture2D(textureFieldE,quv).xyz;
 
                 float q = texture2D(textureMQ,uv).y;
                 float m = texture2D(textureMQ,uv).x;
@@ -203,37 +206,238 @@
 
 <script id="fragmentShaderFieldE" type="x-shader/x-fragment">
 
-           //FIXME TBD
-
-           uniform sampler2D textureE;
-           uniform sampler2D textureB;
+           //TODO: central difference
+           uniform sampler2D textureFieldE;
+           uniform sampler2D textureFieldB;
            uniform float dt;
            uniform float size;
            uniform vec2 resolution;
 
+
+
+
+           vec2 uv = gl_FragCoord.xy/resolution.xy;
+
+           float width = ceil(sqrt(size));
+           float step = 1.0/size;
+
+
+
+
+            vec4 getSteps(vec2 uv){
+
+            //TODO: change return type
+
+            float r = size-(floor(size/width))*width;
+
+            //calculate new uv vector if x changes by +1
+
+            float x = uv.x*size;
+            float tile = floor(x/width);
+            x -= tile * width; //map to [0,size-1]
+            x=mod((x+1.0),width); //one step, check range
+            x+=tile*width; //actual position
+            x=x/size; //position mapped to [0,1]
+
+
+            //calculate new uv vector if y changes by +1
+
+            float y = uv.y*size;
+            float row = floor(y/width);
+            y-= tile*width;
+            y=mod((y+1.0),width);
+            y+=tile*width;
+            y=y/size;
+
+            //calculate new uv vector if z changes by +1
+            vec2 zuv=uv;
+            float upos = uv.x*(width-1.0);
+            float vpos = uv.y*(width-1.0);
+            float posz = upos+vpos*width;
+
+            posz=mod((posz+1.0),size);//tile number + 1
+
+            if(mod(posz,width)==0.0){//changed row
+                zuv.y=zuv.y+width*step;
+            }else
+                zuv.x=zuv.x+width*step;
+
+
+
+            return vec4(x,y,zuv);
+
+            }
+
+
+            vec3 rotor( float h){
+
+
+            vec4 vecuv = getSteps(uv);
+
+            //rx
+            //dBz/dy
+
+            float left = (texture2D(textureFieldB, vec2(uv.x,vecuv.y)).z-texture2D(textureFieldB,uv).z)/h;
+
+            //dBy/dz
+
+            float right = (texture2D(textureFieldB, vec2(vecuv.z,vecuv.w)).y-texture2D(textureFieldB,uv).y)/h;
+            float rx = left - right;
+
+            //ry
+            //dBx/dz
+             left = (texture2D(textureFieldB,vec2(vecuv.z,vecuv.w)).x-texture2D(textureFieldB,uv).x)/h;
+
+            //dBz/dx
+
+            right = (texture2D(textureFieldB,vec2(vecuv.x,uv.y)).z-texture2D(textureFieldB,uv).z)/h;
+            float ry = left-right;
+
+            //rz
+            //dBy/dx
+             left = (texture2D(textureFieldB,vec2(vecuv.x,uv.y)).y-texture2D(textureFieldB,uv).y)/h;
+
+            //dBx/dy
+
+            right = (texture2D(textureFieldB,vec2(uv.x,vecuv.y)).z-texture2D(textureFieldB,uv).z)/h;
+
+            float rz = left-right;
+
+            vec3 ret = vec3(rx,ry,rz);
+            return ret;
+           }
+
            void main(){
 
-           vec2 uv = gl_Fr1agCoord.xy/resolution.xy;
-           vec3 color = texture2D( textureE, uv ).xyz;
 
 
-            gl_FragColor=vec4(color, 1.0);
+            //pass through
+            vec3 color = texture2D( textureFieldE, uv ).xyz;
 
+            vec3 rotB = rotor(0.1);
+            vec3 E_old = texture2D(textureFieldE,uv).xyz;
+            vec3 E_new = E_old + dt*rotB;
+            gl_FragColor = vec4(E_new,1.0);
            }
+
+
 
 
 
 </script>
 
 <script id="fragmentShaderFieldB" type="x-shader/x-fragment">
-            //FIXME TBD
 
-           uniform sampler2D textureE;
+           uniform sampler2D textureFieldE;
+           uniform sampler2D textureFieldB;
+           uniform float dt;
+           uniform float size;
+           uniform vec2 resolution;
+
+           vec2 uv = gl_FragCoord.xy/resolution.xy;
+
+
+            float width = ceil(sqrt(size));
+            float step = 1.0/size;
+
+            vec4 getSteps(vec2 uv){
+
+            //TODO: change return type
+
+            float r = size-(floor(size/width))*width;
+
+            //calculate new uv vector if x changes by +1
+
+            float x = uv.x*size;
+            float tile = floor(x/width);
+            x -= tile * width; //map to [0,size-1]
+            x=mod((x+1.0),width); //one step, check range
+            x+=tile*width; //actual position
+            x=x/size; //position mapped to [0,1]
+
+
+            //calculate new uv vector if y changes by +1
+
+            float y = uv.y*size;
+            float row = floor(y/width);
+            y-= tile*width;
+            y=mod((y+1.0),width);
+            y+=tile*width;
+            y=y/size;
+
+            //calculate new uv vector if z changes by +1
+            vec2 zuv=uv;
+            float upos = uv.x*(width-1.0);
+            float vpos = uv.y*(width-1.0);
+            float posz = upos+vpos*width;
+
+            posz=mod((posz+1.0),size);//tile number + 1
+
+            if(mod(posz,width)==0.0){//changed row
+                zuv.y=zuv.y+width*step;
+            }else
+                zuv.x=zuv.x+width*step;
 
 
 
+            return vec4(x,y,zuv);
+
+            }
 
 
+           vec3 rotor( float h){
+
+
+            vec4 vecuv = getSteps(uv);
+
+            //rx
+            //dBz/dy
+
+            float left = (texture2D(textureFieldE, vec2(uv.x,vecuv.y)).z-texture2D(textureFieldE,uv).z)/h;
+
+            //dBy/dz
+
+            float right = (texture2D(textureFieldE, vec2(vecuv.z,vecuv.w)).y-texture2D(textureFieldE,uv).y)/h;
+            float rx = left - right;
+
+            //ry
+            //dBx/dz
+             left = (texture2D(textureFieldE,vec2(vecuv.z,vecuv.w)).x-texture2D(textureFieldE,uv).x)/h;
+
+            //dBz/dx
+
+            right = (texture2D(textureFieldE,vec2(vecuv.x,uv.y)).z-texture2D(textureFieldE,uv).z)/h;
+            float ry = left-right;
+
+            //rz
+            //dBy/dx
+             left = (texture2D(textureFieldE,vec2(vecuv.x,uv.y)).y-texture2D(textureFieldE,uv).y)/h;
+
+            //dBx/dy
+
+            right = (texture2D(textureFieldE,vec2(uv.x,vecuv.y)).z-texture2D(textureFieldE,uv).z)/h;
+
+            float rz = left-right;
+
+            vec3 ret = vec3(rx,ry,rz);
+            return ret;
+           }
+
+
+           void main(){
+
+
+           vec2 uv = gl_FragCoord.xy/resolution.xy;
+
+            vec3 color = texture2D( textureFieldB, uv ).xyz;//passthrough
+
+            vec3 rotE = rotor(0.1);
+            vec3 B_old = texture2D(textureFieldB,uv).xyz;
+            vec3 B_new = B_old - dt*rotE;
+
+            gl_FragColor=vec4(B_new, 1.0);
+
+           }
 
 </script>
 
@@ -350,7 +554,7 @@
 
 
     gui.add(text, 'Particles',1,10000);
-    gui.add(text,'fieldpoints',2,16).step(1);
+    gui.add(text,'fieldpoints',2,20).step(1);
     gui.add(text, 'gy',-0.9999,0.9999);
 
     gui.add(text,'m',0.0,1.0);
@@ -375,10 +579,10 @@
 
     gui.add(inf,'info');
 
-   /* var debug= {debug: function(){
+    var debug= {debug: function(){
         dispTex = !dispTex;
     }}
-    gui.add(debug,'debug');*/
+    gui.add(debug,'debug');
 
     //end gui
 
