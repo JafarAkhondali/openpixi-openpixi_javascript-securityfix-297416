@@ -26,7 +26,7 @@ function init(){
 
 
     //add skybox to scene
-    var skyBoxGeometry = new THREE.BoxGeometry( 10000, 10000, 10000 );
+    var skyBoxGeometry = new THREE.BoxGeometry( 15000, 15000, 15000 );
     var skyBoxMaterial = new THREE.MeshBasicMaterial( { color: 0x003366, side: THREE.BackSide } );
     var skyBox = new THREE.Mesh( skyBoxGeometry, skyBoxMaterial );
     scene.add(skyBox);
@@ -52,7 +52,11 @@ function init(){
     scene.add(gridYZ);
 
 
+
+
+
     //start simulation
+
     simulate();
 }
     function initParticleSystem(){
@@ -103,8 +107,13 @@ function init(){
         scene.add(particles);
     }
 
+
+
+
     function simulate(){
         requestAnimationFrame(simulate);
+
+        DT = text.dt;
 
         simul.simulate();
 

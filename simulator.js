@@ -141,16 +141,42 @@ function simulator(width,renderer){
         fragmentShader: document.getElementById('fragmentShaderFieldB').textContent
     });
 
+    //vector display shaders
+
+
+    var  vecShaderE = new THREE.ShaderMaterial({
+        uniforms:{
+            test:{type:"f",value:null},
+            size:{type:"f",value: FSIZE},
+            width:{type:"f",value: Math.ceil(Math.sqrt(FSIZE))},
+            textureFieldE:{type:"t",value:null}
+        },
+        vertexShader: document.getElementById('vectorVertexShaderE').textContent,
+        fragmentShader: document.getElementById('vectorFragmentShaderE').textContent
+    });
+
+    var  vecShaderB = new THREE.ShaderMaterial({
+        uniforms:{
+            size:{type:"f",value: FSIZE},
+            width:{type:"f",value: Math.ceil(Math.sqrt(FSIZE))},
+            textureFieldB:{type:"t",value:null}
+        },
+        vertexShader: document.getElementById('vectorVertexShaderB').textContent,
+        fragmentShader: document.getElementById('vectorFragmentShaderB').textContent
+    });
 
     //end shaders
 
     var pingpong = true;
     var rtPosition1, rtPosition2, rtVelocity1, rtVelocity2, rtAcceleration1, rtAcceleration2,rtMassCharge;
-    var rtfieldB1,rtfieldB2,rtfieldE1,rtfieldE2;   //FIXME
+    var rtfieldB1,rtfieldB2,rtfieldE1,rtfieldE2;
+
 
 
 
     this.init = function(){
+
+
 
         var dtPosition = generatePositionTexture();
         var dtVelocity = generateVelocityTexture();
@@ -185,12 +211,19 @@ function simulator(width,renderer){
 
 
         renderTexture(res,dtMassCharge, rtMassCharge);
+
+
+
         //field
 
 
         var dtfieldE = generateFieldTex(new THREE.Vector3(E.x, E.y, E.z));
         var dtfieldB = generateFieldTex(new THREE.Vector3(B.x, B.y, B.z));
-        //var dtfieldB = generateFieldTex(new THREE.Vector3(1, 0, 0));//FIXME DEBUG
+        //var dtfieldB = generateFieldTexB();//FIXME DEBUG
+        //var dtfieldE = generateFieldTexE();
+
+
+
 
 
         var w = Math.ceil(Math.sqrt(FSIZE));
@@ -206,7 +239,44 @@ function simulator(width,renderer){
 
         renderTexture(new THREE.Vector2(FSIZE*w,FSIZE*w),dtfieldB,rtfieldB1);
         renderTexture(new THREE.Vector2(FSIZE*w,FSIZE*w),dtfieldB,rtfieldB2);
-        showTex(rtfieldB1);
+        showTex(rtfieldE1);
+
+
+        //field display vectors
+
+
+
+            var step = BOUNDS/FSIZE;
+
+            vecShaderB.uniforms.textureFieldB.value=rtfieldB1;
+            vecShaderE.uniforms.textureFieldE.value=rtfieldE1;
+
+        for( var z = -BOUNDS/2; z<BOUNDS/2;z+=step){
+
+                for(var y = -BOUNDS/2; y<BOUNDS/2;y+=step){
+
+                    for(var x = -BOUNDS/2; x<BOUNDS/2;x+=step){
+
+                        var vecgeometry = new THREE.Geometry();
+                        vecgeometry.vertices.push(new THREE.Vector3(x,y,z));
+                        vecgeometry.vertices.push(new THREE.Vector3(x,y+1000,z));
+
+
+                        var lineE = new THREE.Line(vecgeometry,vecShaderE);
+                        var lineB = new THREE.Line(vecgeometry,vecShaderB);
+
+                        scene.add(lineE);
+                        scene.add(lineB);
+
+                    }
+
+                }
+
+
+            }
+
+
+
 
     }
 
@@ -226,6 +296,8 @@ function simulator(width,renderer){
             renderFieldE(rtfieldB1,rtfieldE1,rtfieldE2);
             renderFieldB(rtfieldB1,rtfieldE1,rtfieldB2);
 
+            renderVectors(rtfieldB1,rtfieldE1);
+
 
         } else {
 
@@ -235,6 +307,8 @@ function simulator(width,renderer){
 
             renderFieldE(rtfieldB2,rtfieldE2,rtfieldE1);
             renderFieldB(rtfieldB2,rtfieldE2,rtfieldB1);
+
+            renderVectors(rtfieldB2,rtfieldE2);
 
         }
 
@@ -247,6 +321,8 @@ function simulator(width,renderer){
     function renderPosition(position, velocity, output) {
 
         mesh.material = positionShader;
+
+        positionShader.uniforms.dt.value=DT;
         positionShader.uniforms.texturePosition.value = position;
         positionShader.uniforms.textureVelocity.value = velocity;
         renderer.render(ppscene, camera, output);
@@ -257,6 +333,8 @@ function simulator(width,renderer){
     //render to texture using velocityShader
     function renderVelocity(position,acceleration, velocity, output) {
         mesh.material = velocityShader;
+
+        velocityShader.uniforms.dt.value=DT;
         velocityShader.uniforms.texturePosition.value = position;
         velocityShader.uniforms.textureVelocity.value = velocity;
         velocityShader.uniforms.textureAcceleration.value = acceleration;
@@ -266,6 +344,8 @@ function simulator(width,renderer){
     function renderAcceleration(position, velocity, acceleration,fieldB,fieldE, output){
 
         mesh.material = accelerationShader;
+
+        accelerationShader.uniforms.dt.value=DT;
         accelerationShader.uniforms.texturePosition.value = position;
         accelerationShader.uniforms.textureVelocity.value = velocity;
         accelerationShader.uniforms.textureAcceleration.value = acceleration;
@@ -283,6 +363,8 @@ function simulator(width,renderer){
 
         meshF.material = fieldEShader;
 
+
+        fieldEShader.uniforms.dt.value=DT;
         fieldEShader.uniforms.textureFieldE.value = fieldE;
         fieldEShader.uniforms.textureFieldB.value = fieldB;
 
@@ -294,10 +376,21 @@ function simulator(width,renderer){
 
         meshF.material = fieldBShader;
 
+
+        fieldBShader.uniforms.dt.value=DT;
         fieldBShader.uniforms.textureFieldE.value = fieldE;
         fieldBShader.uniforms.textureFieldB.value = fieldB;
 
         renderer.render(ppsceneF,camera,output);
+
+    }
+
+    //update fieldtexture for vectors
+
+    function renderVectors(fieldB,fieldE){
+
+        vecShaderE.uniforms.textureFieldE.value=fieldE;
+        vecShaderB.uniforms.textureFieldB.value=fieldB;
 
     }
 
@@ -418,7 +511,7 @@ function simulator(width,renderer){
         return texture;
     }
 
-    //texture generators - field
+
 
 
     function generateMQTexture(){
@@ -455,16 +548,18 @@ function simulator(width,renderer){
 
 
 
+    //texture generators - field
+
     function generateFieldTex(vec){
     //generates quadratic texture for field lookup
-
+    //TODO: simplify
 
         var width = Math.ceil(Math.sqrt(FSIZE)); //number of FSIZExFSIZE tiles per row/column
-        var texsize = width*FSIZE*width*FSIZE;
+        var texsize = width*FSIZE*width*FSIZE; //number of pixels in texture
 
         var a = new Float32Array(texsize*4);
 
-        var filled = FSIZE*FSIZE*width*Math.floor(FSIZE/width);
+        var filled = FSIZE*FSIZE*width*Math.floor(FSIZE/width);//last pixel of fully filled row
 
         //completely filled rows
         for(var k=0;k<filled;k++){
@@ -479,7 +574,7 @@ function simulator(width,renderer){
         }
 
         var r = FSIZE-(Math.floor(FSIZE/width))*width;//rth row is partly filled
-        var endrow = filled+FSIZE*width*FSIZE;
+        var endrow = filled+FSIZE*width*FSIZE; //index of last pixel filled
 
         //partly filled row
         for(var k=filled;k<endrow;k++){
@@ -539,7 +634,161 @@ function simulator(width,renderer){
 
     }
 
+    //test fields with sin/cos
+    function generateFieldTexB(){
+        //generates quadratic texture for field lookup
 
+
+        var width = Math.ceil(Math.sqrt(FSIZE)); //number of FSIZExFSIZE tiles per row/column
+        var texsize = width*FSIZE*width*FSIZE; //number of pixels in texture
+
+        var a = new Float32Array(texsize*4);
+
+        var c = (2*Math.PI)/FSIZE;
+        var e0 = 0.05;
+
+        var filled = FSIZE*FSIZE*width*Math.floor(FSIZE/width);//last pixel of fully filled row
+
+        //completely filled rows
+        /*for(var k=0;k<filled;k++){
+            var x = Math.floor(k/(FSIZE*width));
+
+
+            a[k*4+0] = 0;
+            a[k*4+1] = 0;
+            a[k*4+2] = e0*Math.cos(c*x);
+            a[k*4+3] = 1;
+
+
+        }
+
+        var r = FSIZE-(Math.floor(FSIZE/width))*width;//rth row is partly filled
+        var endrow = filled+FSIZE*width*FSIZE; //index of last pixel filled
+
+        //partly filled row
+        for(var k=filled;k<endrow;k++){
+
+            var dec = Math.floor(k/(FSIZE*width))*width*FSIZE;
+
+            if((k-dec)<r*FSIZE){
+                var x = Math.floor(k/(FSIZE*width));
+
+                a[k*4+0] = 0;
+                a[k*4+1] = 0;
+                a[k*4+2] = e0*Math.cos(x*c);
+                a[k*4+3] = 1;
+            }
+            else{
+                a[k*4+0] = 0;
+                a[k*4+1] = 0;
+                a[k*4+2] = 0;
+                a[k*4+3] = 1;
+            }
+
+
+
+        }*/
+
+
+        for(var k=0;k<texsize;k++){
+            var x = Math.floor(k/(FSIZE*width));
+
+
+            a[k*4+0] =0;
+            a[k*4+1] =0;
+            a[k*4+2] = e0*Math.cos(c*x);
+            a[k*4+3] = 1;
+
+
+        }
+
+        var texture = new THREE.DataTexture(a, width*FSIZE, width*FSIZE, THREE.RGBAFormat, THREE.FloatType );
+        texture.minFilter = THREE.NearestFilter;
+        texture.magFilter = THREE.NearestFilter;
+        texture.needsUpdate = true;
+        texture.flipY = false;
+
+
+        return texture;
+    }
+
+    function generateFieldTexE(){
+        //generates quadratic texture for field lookup
+
+
+        var width = Math.ceil(Math.sqrt(FSIZE)); //number of FSIZExFSIZE tiles per row/column
+        var texsize = width*FSIZE*width*FSIZE; //number of pixels in texture
+
+        var a = new Float32Array(texsize*4);
+
+        var c = (2*Math.PI)/FSIZE;
+        var e0 = 0.05;
+
+        var filled = FSIZE*FSIZE*width*Math.floor(FSIZE/width);//last pixel of fully filled row
+
+        //completely filled rows
+        /*for(var k=0;k<filled;k++){
+            var x = Math.floor(k/(FSIZE*width));
+
+
+            a[k*4+0] = 0;
+            a[k*4+1] = e0*Math.sin(x*c);
+            a[k*4+2] = 0
+            a[k*4+3] = 1;
+
+
+        }
+
+        var r = FSIZE-(Math.floor(FSIZE/width))*width;//rth row is partly filled
+        var endrow = filled+FSIZE*width*FSIZE; //index of last pixel filled
+
+        //partly filled row
+        for(var k=filled;k<endrow;k++){
+
+            var dec = Math.floor(k/(FSIZE*width))*width*FSIZE;
+
+            if((k-dec)<r*FSIZE){
+                var x = Math.floor(k/(FSIZE*width));
+
+
+                a[k*4+0] = 0;
+                a[k*4+1] = e0* Math.sin(x*c);
+                a[k*4+2] = 0
+                a[k*4+3] = 1;
+            }
+            else{
+                a[k*4+0] = 0;
+                a[k*4+1] = 0;
+                a[k*4+2] = 0;
+                a[k*4+3] = 1;
+            }
+
+
+
+        }*/
+
+
+        for(var k=0;k<texsize;k++){
+            var x = Math.floor(k/(FSIZE*width));
+
+
+            a[k*4+0] = 0;
+            a[k*4+1] = e0*Math.sin(x*c);
+            a[k*4+2] =0;
+            a[k*4+3] = 1;
+
+
+        }
+
+        var texture = new THREE.DataTexture(a, width*FSIZE, width*FSIZE, THREE.RGBAFormat, THREE.FloatType );
+        texture.minFilter = THREE.NearestFilter;
+        texture.magFilter = THREE.NearestFilter;
+        texture.needsUpdate = true;
+        texture.flipY = false;
+
+
+        return texture;
+    }
 
 
 }
