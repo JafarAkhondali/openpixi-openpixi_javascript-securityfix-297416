@@ -3,6 +3,7 @@ function simulator(width,renderer){
     var camera = new THREE.Camera();
     camera.position.z = 1;
     var currentPosition;
+
     //check for extensions, not working on mobile devices, details see alert message
 
     var gl = renderer.getContext();
@@ -54,8 +55,7 @@ function simulator(width,renderer){
             dt : { type: "f",value: DT},
             resolution: { type: "v2", value: new THREE.Vector2( width, width ) },
             texturePosition: { type: "t", value: null },
-            textureVelocity: { type: "t", value: null },
-            fieldarray: { type: "t", value: null}
+            textureVelocity: { type: "t", value: null }
         },
         vertexShader: document.getElementById( 'passThruVertexShader' ).textContent,
         fragmentShader: document.getElementById( 'fragmentShaderPosition' ).textContent
@@ -121,7 +121,8 @@ function simulator(width,renderer){
             resolution: {type: "v2",value: res},
             size: {type: "f",value: FSIZE},
             textureFieldE:{type: "t",value :null},
-            textureFieldB:{type: "t",value :null}
+            textureFieldB:{type: "t",value :null},
+            textureFieldJ:{type:"t",value: null}
 
         },
         vertexShader: document.getElementById('passThruVertexShader').textContent,
@@ -140,6 +141,22 @@ function simulator(width,renderer){
         vertexShader: document.getElementById('passThruVertexShader').textContent,
         fragmentShader: document.getElementById('fragmentShaderFieldB').textContent
     });
+
+
+    var fieldJShader = new THREE.ShaderMaterial({
+        uniforms:{
+            resolution : {type: "v2",value: res},
+            size : {type: "f", value: FSIZE},
+            texturePosition : {type: "t", value: null},
+            textureVelocity : {type: "t", value: null},
+            textureJ : {type: "t", value: null}
+        },
+
+        vertexShader: document.getElementById('passThruVertexShader').textContent,
+        fragmentShader: document.getElementById('fragmentShaderJ').textContent
+
+    });
+
 
     //vector display shaders
 
@@ -170,7 +187,7 @@ function simulator(width,renderer){
     var pingpong = true;
     var rtPosition1, rtPosition2, rtVelocity1, rtVelocity2, rtAcceleration1, rtAcceleration2,rtMassCharge;
     var rtfieldB1,rtfieldB2,rtfieldE1,rtfieldE2;
-
+    var rtJ1,rtJ2;
 
 
 
@@ -216,6 +233,7 @@ function simulator(width,renderer){
 
         //field
 
+        var dtJ = generateFieldTex(new THREE.Vector3(0,0,0));
 
         var dtfieldE = generateFieldTex(new THREE.Vector3(E.x, E.y, E.z));
         var dtfieldB = generateFieldTex(new THREE.Vector3(B.x, B.y, B.z));
@@ -239,9 +257,15 @@ function simulator(width,renderer){
 
         renderTexture(new THREE.Vector2(FSIZE*w,FSIZE*w),dtfieldB,rtfieldB1);
         renderTexture(new THREE.Vector2(FSIZE*w,FSIZE*w),dtfieldB,rtfieldB2);
-        showTex(rtfieldE1);
 
 
+        rtJ1 = getRenderTarget(FSIZE*w,FSIZE*w);
+        rtJ2 = rtJ1.clone();
+        renderTexture(new THREE.Vector2(FSIZE*w,FSIZE*w),dtJ,rtJ1);
+        renderTexture(new THREE.Vector2(FSIZE*w,FSIZE*w),dtJ,rtJ2);
+
+        //fixme debug
+        showTex(rtMassCharge);
         //field display vectors
 
 
@@ -291,9 +315,12 @@ function simulator(width,renderer){
 
             renderAcceleration(rtPosition1,rtVelocity1, rtAcceleration1,rtfieldB1,rtfieldE1, rtAcceleration2);
             renderVelocity(rtPosition1,rtAcceleration1, rtVelocity1, rtVelocity2);
+
+            renderFieldJ(rtPosition1,rtVelocity1,rtJ1,rtJ2);
+
             renderPosition(rtPosition1, rtVelocity1, rtPosition2);
 
-            renderFieldE(rtfieldB1,rtfieldE1,rtfieldE2);
+            renderFieldE(rtfieldB1,rtfieldE1,rtJ1,rtfieldE2);
             renderFieldB(rtfieldB1,rtfieldE1,rtfieldB2);
 
             renderVectors(rtfieldB1,rtfieldE1);
@@ -303,9 +330,12 @@ function simulator(width,renderer){
 
             renderAcceleration(rtPosition2,rtVelocity2, rtAcceleration2,rtfieldB2,rtfieldE2, rtAcceleration1);
             renderVelocity(rtPosition2,rtAcceleration2, rtVelocity2, rtVelocity1);
+
+            renderFieldJ(rtPosition2,rtVelocity2,rtJ2,rtJ1);
+
             renderPosition(rtPosition2, rtVelocity2, rtPosition1);
 
-            renderFieldE(rtfieldB2,rtfieldE2,rtfieldE1);
+            renderFieldE(rtfieldB2,rtfieldE2,rtJ2,rtfieldE1);
             renderFieldB(rtfieldB2,rtfieldE2,rtfieldB1);
 
             renderVectors(rtfieldB2,rtfieldE2);
@@ -353,13 +383,14 @@ function simulator(width,renderer){
         accelerationShader.uniforms.textureFieldE.value = fieldE;
         accelerationShader.uniforms.size.value = FSIZE;
         accelerationShader.uniforms.textureMQ.value = rtMassCharge;
+        //fixme gy value gui
 
         renderer.render(ppscene,camera,output);
 
     }
 
     //render to texture using FieldE shader
-    function renderFieldE(fieldB,fieldE,output){
+    function renderFieldE(fieldB,fieldE,fieldJ,output){
 
         meshF.material = fieldEShader;
 
@@ -367,6 +398,8 @@ function simulator(width,renderer){
         fieldEShader.uniforms.dt.value=DT;
         fieldEShader.uniforms.textureFieldE.value = fieldE;
         fieldEShader.uniforms.textureFieldB.value = fieldB;
+
+        fieldEShader.uniforms.textureFieldJ.value = fieldJ;
 
         renderer.render(ppsceneF,camera,output);
     }
@@ -380,6 +413,19 @@ function simulator(width,renderer){
         fieldBShader.uniforms.dt.value=DT;
         fieldBShader.uniforms.textureFieldE.value = fieldE;
         fieldBShader.uniforms.textureFieldB.value = fieldB;
+
+        renderer.render(ppsceneF,camera,output);
+
+    }
+
+    function renderFieldJ(position,velocity,fieldJ,output){
+
+        meshF.material = fieldJShader;
+
+
+        fieldJShader.uniforms.texturePosition.value = position;
+        fieldJShader.uniforms.textureVelocity.value = velocity;
+        fieldJShader.uniforms.textureJ.value = fieldJ;
 
         renderer.render(ppsceneF,camera,output);
 
@@ -515,7 +561,7 @@ function simulator(width,renderer){
 
 
     function generateMQTexture(){
-
+        //fixme: m,q gui
         var m,q;
 
 
@@ -562,7 +608,7 @@ function simulator(width,renderer){
         var filled = FSIZE*FSIZE*width*Math.floor(FSIZE/width);//last pixel of fully filled row
 
         //completely filled rows
-        for(var k=0;k<filled;k++){
+        /*for(var k=0;k<filled;k++){
 
 
             a[k*4+0] = vec.x;
@@ -598,8 +644,19 @@ function simulator(width,renderer){
 
 
 
-        }
+        }*/
 
+
+        for(var k=0;k<texsize/2;k++){
+
+
+            a[k*4+0] = vec.x;
+            a[k*4+1] = vec.y;
+            a[k*4+2] = vec.z;
+            a[k*4+3] = 1;
+
+
+        }
 
         var texture = new THREE.DataTexture(a, width*FSIZE, width*FSIZE, THREE.RGBAFormat, THREE.FloatType );
         texture.minFilter = THREE.NearestFilter;
@@ -727,7 +784,7 @@ function simulator(width,renderer){
         var filled = FSIZE*FSIZE*width*Math.floor(FSIZE/width);//last pixel of fully filled row
 
         //completely filled rows
-        /*for(var k=0;k<filled;k++){
+       /* for(var k=0;k<filled;k++){
             var x = Math.floor(k/(FSIZE*width));
 
 
@@ -769,16 +826,16 @@ function simulator(width,renderer){
 
 
         for(var k=0;k<texsize;k++){
-            var x = Math.floor(k/(FSIZE*width));
+         var x = Math.floor(k/(FSIZE*width));
 
 
-            a[k*4+0] = 0;
-            a[k*4+1] = e0*Math.sin(x*c);
-            a[k*4+2] =0;
-            a[k*4+3] = 1;
+         a[k*4+0] = 0;
+         a[k*4+1] = e0*Math.sin(x*c);
+         a[k*4+2] =0;
+         a[k*4+3] = 1;
 
 
-        }
+         }
 
         var texture = new THREE.DataTexture(a, width*FSIZE, width*FSIZE, THREE.RGBAFormat, THREE.FloatType );
         texture.minFilter = THREE.NearestFilter;
