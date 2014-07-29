@@ -345,7 +345,7 @@
             vec3 rotB = rotor(uv);
             vec3 j = texture2D(textureFieldJ,uv).xyz;
             vec3 E_old = texture2D(textureFieldE,uv).xyz;
-            vec3 E_new = 0.99*E_old + dt*(rotB-j);
+            vec3 E_new = E_old + dt*(rotB-j);
 
             gl_FragColor=vec4(E_new, 1.0);
 
@@ -484,7 +484,7 @@
 
             vec3 rotE = rotor(uv);
             vec3 B_old = texture2D(textureFieldB,uv).xyz;
-            vec3 B_new = 0.99*B_old - dt*rotE;
+            vec3 B_new = B_old - dt*rotE;
 
             gl_FragColor=vec4(B_new, 1.0);
 
