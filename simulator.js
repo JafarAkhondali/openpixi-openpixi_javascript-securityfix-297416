@@ -265,21 +265,21 @@ function simulator(width,renderer){
         renderTexture(new THREE.Vector2(FSIZE*w,FSIZE*w),dtJ,rtJ2);
 
         //fixme debug
-        showTex(rtMassCharge);
+        showTex(rtfieldE1);
         //field display vectors
 
 
 
-            var step = BOUNDS/FSIZE;
+            var step = BOUNDS/(FSIZE); //fixme
 
             vecShaderB.uniforms.textureFieldB.value=rtfieldB1;
             vecShaderE.uniforms.textureFieldE.value=rtfieldE1;
 
-        for( var z = -BOUNDS/2; z<BOUNDS/2;z+=step){
+        for( var z = -BOUNDS/2+step/2; z<BOUNDS/2;z+=step){
 
-                for(var y = -BOUNDS/2; y<BOUNDS/2;y+=step){
+                for(var y = -BOUNDS/2+step/2; y<BOUNDS/2;y+=step){
 
-                    for(var x = -BOUNDS/2; x<BOUNDS/2;x+=step){
+                    for(var x = -BOUNDS/2+step/2; x<BOUNDS/2;x+=step){
 
                         var vecgeometry = new THREE.Geometry();
                         vecgeometry.vertices.push(new THREE.Vector3(x,y,z));
@@ -607,56 +607,77 @@ function simulator(width,renderer){
 
         var filled = FSIZE*FSIZE*width*Math.floor(FSIZE/width);//last pixel of fully filled row
 
-        //completely filled rows
-        /*for(var k=0;k<filled;k++){
+        for(var k=0;k<texsize;k++){
 
-
-            a[k*4+0] = vec.x;
-            a[k*4+1] = vec.y;
-            a[k*4+2] = vec.z;
+            a[k*4+0] = 0;
+            a[k*4+1] = 0;
+            a[k*4+2] = 0;
             a[k*4+3] = 1;
 
+           // if(k<texsize/4){
 
-        }
-
-        var r = FSIZE-(Math.floor(FSIZE/width))*width;//rth row is partly filled
-        var endrow = filled+FSIZE*width*FSIZE; //index of last pixel filled
-
-        //partly filled row
-        for(var k=filled;k<endrow;k++){
-
-            var dec = Math.floor(k/(FSIZE*width))*width*FSIZE;
-
-            if((k-dec)<r*FSIZE){
-
-
-                a[k*4+0] = vec.x;
+                /*a[k*4+0] = vec.x;
                 a[k*4+1] = vec.y;
                 a[k*4+2] = vec.z;
-                a[k*4+3] = 1;
-            }
-            else{
-                a[k*4+0] = 0;
-                a[k*4+1] = 0;
-                a[k*4+2] = 0;
-                a[k*4+3] = 1;
-            }
+                a[k*4+3] = 1;*/
 
 
+            //}
 
-        }*/
+            if(k<15){
 
-
-        for(var k=0;k<texsize/2;k++){
-
-
-            a[k*4+0] = vec.x;
-            a[k*4+1] = vec.y;
-            a[k*4+2] = vec.z;
+            a[k*4+0] = 0;
+            a[k*4+1] = 0.2;
+            a[k*4+2] = 0;
             a[k*4+3] = 1;
-
+        }
 
         }
+
+
+
+
+
+            /*k=texsize-1;
+            a[k*4+0] = 0.2;
+            a[k*4+1] = 0;
+            a[k*4+2] = 0;
+            a[k*4+3] = 1;*/
+
+
+
+
+
+        var texture = new THREE.DataTexture(a, width*FSIZE, width*FSIZE, THREE.RGBAFormat, THREE.FloatType );
+        texture.minFilter = THREE.NearestFilter;
+        texture.magFilter = THREE.NearestFilter;
+        texture.needsUpdate = true;
+        texture.flipY = false;
+
+
+        return texture;
+    }
+
+    function BgenerateFieldTex(vec){
+        //generates quadratic texture for field lookup
+        //TODO: simplify
+
+        var width = Math.ceil(Math.sqrt(FSIZE)); //number of FSIZExFSIZE tiles per row/column
+        var texsize = width*FSIZE*width*FSIZE; //number of pixels in texture
+
+        var a = new Float32Array(texsize*4);
+
+        var filled = FSIZE*FSIZE*width*Math.floor(FSIZE/width);//last pixel of fully filled row
+
+
+
+        k=143;
+        a[k*4+0] = 0;
+        a[k*4+1] = 1;
+        a[k*4+2] = 0.2;
+        a[k*4+3] = 1;
+
+
 
         var texture = new THREE.DataTexture(a, width*FSIZE, width*FSIZE, THREE.RGBAFormat, THREE.FloatType );
         texture.minFilter = THREE.NearestFilter;
