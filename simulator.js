@@ -275,15 +275,15 @@ function simulator(width,renderer){
             vecShaderB.uniforms.textureFieldB.value=rtfieldB1;
             vecShaderE.uniforms.textureFieldE.value=rtfieldE1;
 
-        for( var z = -BOUNDS/2+step/2; z<BOUNDS/2;z+=step){
+        for( var z = -BOUNDS/2; z<BOUNDS/2;z+=step){
 
-                for(var y = -BOUNDS/2+step/2; y<BOUNDS/2;y+=step){
+                for(var y = -BOUNDS/2; y<BOUNDS/2;y+=step){
 
-                    for(var x = -BOUNDS/2+step/2; x<BOUNDS/2;x+=step){
+                    for(var x = -BOUNDS/2; x<BOUNDS/2;x+=step){
 
                         var vecgeometry = new THREE.Geometry();
-                        vecgeometry.vertices.push(new THREE.Vector3(x,y,z));
-                        vecgeometry.vertices.push(new THREE.Vector3(x,y+1000,z));
+                        vecgeometry.vertices.push(new THREE.Vector3(x+step/2,y+step/2,z+step/2));
+                        vecgeometry.vertices.push(new THREE.Vector3(x+step/2,y+step/2+1000,z+step/2));
 
 
                         var lineE = new THREE.Line(vecgeometry,vecShaderE);
@@ -609,9 +609,9 @@ function simulator(width,renderer){
 
         for(var k=0;k<texsize;k++){
 
-            a[k*4+0] = 0;
-            a[k*4+1] = 0;
-            a[k*4+2] = 0;
+            a[k*4+0] = vec.x;
+            a[k*4+1] = vec.y;
+            a[k*4+2] = vec.z;
             a[k*4+3] = 1;
 
            // if(k<texsize/4){
@@ -624,13 +624,13 @@ function simulator(width,renderer){
 
             //}
 
-            if(k<15){
+            /*if(k==7){
 
-            a[k*4+0] = 0;
-            a[k*4+1] = 0.2;
+            a[k*4+0] = 0.2;
+            a[k*4+1] = 0;
             a[k*4+2] = 0;
             a[k*4+3] = 1;
-        }
+            }*/
 
         }
 
