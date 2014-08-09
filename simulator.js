@@ -67,6 +67,7 @@ function simulator(width,renderer){
 
         uniforms: {
             dt : { type: "f",value: DT},
+            init: {type: "i",value:1},
             resolution: { type: "v2", value: new THREE.Vector2( width, width ) },
             texturePosition: { type: "t", value: null },
             textureVelocity: { type: "t", value: null },
@@ -146,6 +147,7 @@ function simulator(width,renderer){
     var fieldJShader = new THREE.ShaderMaterial({
         uniforms:{
             resolution : {type: "v2",value: res},
+            dt: {type: "f", value: null},
             size : {type: "f", value: FSIZE},
             texturePosition : {type: "t", value: null},
             textureVelocity : {type: "t", value: null},
@@ -236,7 +238,7 @@ function simulator(width,renderer){
         var dtJ = generateFieldTex(new THREE.Vector3(0,0,0));
 
         var dtfieldE = generateFieldTex(new THREE.Vector3(E.x, E.y, E.z));
-        var dtfieldB = generateFieldTex(new THREE.Vector3(B.x, B.y, B.z));
+        var dtfieldB = BgenerateFieldTex(new THREE.Vector3(B.x, B.y, B.z));
         //var dtfieldB = generateFieldTexB();//FIXME DEBUG
         //var dtfieldE = generateFieldTexE();
 
@@ -265,7 +267,7 @@ function simulator(width,renderer){
         renderTexture(new THREE.Vector2(FSIZE*w,FSIZE*w),dtJ,rtJ2);
 
         //fixme debug
-        showTex(rtfieldE1);
+        showTex(rtfieldB1);
         //field display vectors
 
 
@@ -422,12 +424,13 @@ function simulator(width,renderer){
 
         meshF.material = fieldJShader;
 
-
+        fieldJShader.uniforms.dt.value = DT;
         fieldJShader.uniforms.texturePosition.value = position;
         fieldJShader.uniforms.textureVelocity.value = velocity;
         fieldJShader.uniforms.textureJ.value = fieldJ;
 
         renderer.render(ppsceneF,camera,output);
+        fieldJShader.uniforms.init =0;
 
     }
 
@@ -482,10 +485,17 @@ function simulator(width,renderer){
             y = Math.random() * BOUNDS - BOUNDS/2;
             z = Math.random() * BOUNDS - BOUNDS/2;
 
+            if(k<text.Particles){
             a[ k*4 + 0 ] = x;
             a[ k*4 + 1 ] = y;
             a[ k*4 + 2 ] = z;
             a[ k*4 + 3 ] = 1;
+            }else{
+            a[ k*4 + 0 ] = 3000; //see shader for j; needs to be out of range else some gridpoints always get called
+            a[ k*4 + 1 ] = 3000;
+            a[ k*4 + 2 ] = 3000;
+            a[ k*4 + 3 ] = 1;
+            }
 
         }
 
@@ -498,6 +508,8 @@ function simulator(width,renderer){
 
         return texture;
     }
+
+
 
     function generateAccelerationTexture(){
         var x, y,z;
@@ -609,10 +621,10 @@ function simulator(width,renderer){
 
         for(var k=0;k<texsize;k++){
 
-            a[k*4+0] = vec.x;
+            /*a[k*4+0] = vec.x;
             a[k*4+1] = vec.y;
             a[k*4+2] = vec.z;
-            a[k*4+3] = 1;
+            a[k*4+3] = 1;*/
 
            // if(k<texsize/4){
 
@@ -624,13 +636,13 @@ function simulator(width,renderer){
 
             //}
 
-            /*if(k==7){
+            if(k==0){
 
             a[k*4+0] = 0.2;
             a[k*4+1] = 0;
             a[k*4+2] = 0;
             a[k*4+3] = 1;
-            }*/
+            }
 
         }
 
@@ -671,10 +683,10 @@ function simulator(width,renderer){
 
 
 
-        k=143;
+        k=42;
         a[k*4+0] = 0;
-        a[k*4+1] = 1;
-        a[k*4+2] = 0.2;
+        a[k*4+1] = 0;
+        a[k*4+2] = 0;
         a[k*4+3] = 1;
 
 
@@ -769,8 +781,8 @@ function simulator(width,renderer){
 
 
         for(var k=0;k<texsize;k++){
-            var x = Math.floor(k/(FSIZE*width));
-
+            //var x = Math.floor(k/(FSIZE*width));
+            var x = k % FSIZE;
 
             a[k*4+0] =0;
             a[k*4+1] =0;
@@ -847,12 +859,13 @@ function simulator(width,renderer){
 
 
         for(var k=0;k<texsize;k++){
-         var x = Math.floor(k/(FSIZE*width));
+         //var x = Math.floor(k/(FSIZE*width));
+            var x = k % FSIZE;
 
 
          a[k*4+0] = 0;
          a[k*4+1] = e0*Math.sin(x*c);
-         a[k*4+2] =0;
+         a[k*4+2] = 0;
          a[k*4+3] = 1;
 
 
