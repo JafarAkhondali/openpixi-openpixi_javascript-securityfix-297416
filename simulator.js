@@ -84,7 +84,7 @@ function simulator(width,renderer){
 
         uniforms: {
             dt : { type: "f",value: DT},
-            gy: {type: "f", value: text.gy},
+            gy: {type: "f", value: gui.vars().gy},
             size: {type: "f", value:null},
             resolution: { type: "v2", value: new THREE.Vector2(width,width)},
             textureVelocity: { type: "t", value: null},
@@ -369,7 +369,7 @@ function simulator(width,renderer){
         accelerationShader.uniforms.textureFieldE.value = fieldE;
         accelerationShader.uniforms.size.value = FSIZE;
         accelerationShader.uniforms.textureMQ.value = rtMassCharge;
-        accelerationShader.uniforms.gy.vlaue= text.gy;
+        accelerationShader.uniforms.gy.vlaue= gui.vars().gy;
 
         renderer.render(ppscene,camera,output);
 
@@ -469,7 +469,7 @@ function simulator(width,renderer){
             y = Math.random() * BOUNDS - BOUNDS/2;
             z = Math.random() * BOUNDS - BOUNDS/2;
 
-            if(k<text.Particles){
+            if(k<gui.vars().Particles){
             a[ k*4 + 0 ] = x;
             a[ k*4 + 1 ] = y;
             a[ k*4 + 2 ] = z;
@@ -557,8 +557,8 @@ function simulator(width,renderer){
 
 
     function generateMQTexture(){
-        var m=text.m;
-        var q=text.q;
+        var m=gui.vars().m;
+        var q=gui.vars().q;
 
 
 
@@ -607,9 +607,9 @@ function simulator(width,renderer){
 
 
 
-            a[k*4+0] = text.Ex;
-            a[k*4+1] = text.Ey;
-            a[k*4+2] = text.Ez;
+            a[k*4+0] = gui.vars().Ex;
+            a[k*4+1] = gui.vars().Ey;
+            a[k*4+2] = gui.vars().Ez;
             a[k*4+3] = 1;
 
 
@@ -641,9 +641,9 @@ function simulator(width,renderer){
 
 
 
-            a[k*4+0] = text.Bx;
-            a[k*4+1] = text.By;
-            a[k*4+2] = text.Bz;
+            a[k*4+0] = gui.vars().Bx;
+            a[k*4+1] = gui.vars().By;
+            a[k*4+2] = gui.vars().Bz;
             a[k*4+3] = 1;
 
 

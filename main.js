@@ -4,11 +4,10 @@ function init(){
 
 
     //set class variables according to gui values
-    B = new THREE.Vector3(text.Bx,text.By,text.Bz);
-    E = new THREE.Vector3(text.Ex,text.Ey,text.Ez);
-    FSIZE = text.fieldpoints;
-    FXY = text.fxy;
-    FZ = text.fz;
+    B = new THREE.Vector3(gui.vars().Bx,gui.vars().By, gui.vars().Bz);
+    E = new THREE.Vector3(gui.vars().Ex,gui.vars().Ey, gui.vars().Ez);
+    FSIZE = gui.vars().fieldpoints;
+
 
 
     //fresh scene
@@ -86,7 +85,7 @@ function init(){
         //initial position next to each other
         var y=0;
         var x=0;
-        for(var p = 0; p<text.Particles;p++){
+        for(var p = 0; p<gui.vars().Particles;p++){
 
             if(x==WIDTH){
                 x=0;
@@ -115,7 +114,7 @@ function init(){
     function simulate(){
         requestAnimationFrame(simulate);
 
-        DT = text.dt;
+        DT = gui.vars().dt;
 
         i++;
       // if(i>100){
