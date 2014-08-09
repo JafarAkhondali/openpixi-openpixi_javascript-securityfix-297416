@@ -189,7 +189,7 @@ function simulator(width,renderer){
     var pingpong = true;
     var rtPosition1, rtPosition2, rtVelocity1, rtVelocity2, rtAcceleration1, rtAcceleration2,rtMassCharge;
     var rtfieldB1,rtfieldB2,rtfieldE1,rtfieldE2;
-    var rtJ1,rtJ2;
+    var rtfieldJ0,rtfieldJ1;
 
 
 
@@ -261,10 +261,10 @@ function simulator(width,renderer){
         renderTexture(new THREE.Vector2(FSIZE*w,FSIZE*w),dtfieldB,rtfieldB2);
 
 
-        rtJ1 = getRenderTarget(FSIZE*w,FSIZE*w);
-        rtJ2 = rtJ1.clone();
-        renderTexture(new THREE.Vector2(FSIZE*w,FSIZE*w),dtJ,rtJ1);
-        renderTexture(new THREE.Vector2(FSIZE*w,FSIZE*w),dtJ,rtJ2);
+        rtfieldJ0 = getRenderTarget(FSIZE*w,FSIZE*w);
+        rtfieldJ1 = rtfieldJ0.clone();
+        renderTexture(new THREE.Vector2(FSIZE*w,FSIZE*w),dtJ,rtfieldJ0);
+        renderTexture(new THREE.Vector2(FSIZE*w,FSIZE*w),dtJ,rtfieldJ1);
 
         //fixme debug
         showTex(rtfieldB1);
@@ -318,11 +318,11 @@ function simulator(width,renderer){
             renderAcceleration(rtPosition1,rtVelocity1, rtAcceleration1,rtfieldB1,rtfieldE1, rtAcceleration2);
             renderVelocity(rtPosition1,rtAcceleration1, rtVelocity1, rtVelocity2);
 
-            renderFieldJ(rtPosition1,rtVelocity1,rtJ1,rtJ2);
+            renderFieldJ(rtPosition1,rtVelocity1,rtfieldJ1);
 
             renderPosition(rtPosition1, rtVelocity1, rtPosition2);
 
-            renderFieldE(rtfieldB1,rtfieldE1,rtJ1,rtfieldE2);
+            renderFieldE(rtfieldB1,rtfieldE1,rtfieldJ1,rtfieldE2);
             renderFieldB(rtfieldB1,rtfieldE1,rtfieldB2);
 
             renderVectors(rtfieldB1,rtfieldE1);
@@ -333,11 +333,11 @@ function simulator(width,renderer){
             renderAcceleration(rtPosition2,rtVelocity2, rtAcceleration2,rtfieldB2,rtfieldE2, rtAcceleration1);
             renderVelocity(rtPosition2,rtAcceleration2, rtVelocity2, rtVelocity1);
 
-            renderFieldJ(rtPosition2,rtVelocity2,rtJ2,rtJ1);
+            renderFieldJ(rtPosition2,rtVelocity2,rtfieldJ1);
 
             renderPosition(rtPosition2, rtVelocity2, rtPosition1);
 
-            renderFieldE(rtfieldB2,rtfieldE2,rtJ2,rtfieldE1);
+            renderFieldE(rtfieldB2,rtfieldE2,rtfieldJ1,rtfieldE1);
             renderFieldB(rtfieldB2,rtfieldE2,rtfieldB1);
 
             renderVectors(rtfieldB2,rtfieldE2);
@@ -420,14 +420,14 @@ function simulator(width,renderer){
 
     }
 
-    function renderFieldJ(position,velocity,fieldJ,output){
+    function renderFieldJ(position,velocity,output){
 
         meshF.material = fieldJShader;
 
         fieldJShader.uniforms.dt.value = DT;
         fieldJShader.uniforms.texturePosition.value = position;
         fieldJShader.uniforms.textureVelocity.value = velocity;
-        fieldJShader.uniforms.textureJ.value = fieldJ;
+        fieldJShader.uniforms.textureJ.value = rtfieldJ0;
 
         renderer.render(ppsceneF,camera,output);
         fieldJShader.uniforms.init =0;

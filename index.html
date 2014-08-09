@@ -341,7 +341,7 @@
 
 
 
-            gl_FragColor=vec4(E_new, 1.0);//rotB
+            gl_FragColor=vec4(E_new, 1.0);
 
 
            }
@@ -440,13 +440,7 @@
             float ry = ryl-ryr;
             float rz = rzl-rzr;
 
-            //if(abs(rx)>0.1||abs(ry)>1.0||abs(rz)>0.1){
-            //return vec3(0.0,0.0,0.0);
-            //}
 
-            //if(dy.x==0.2){//&&abs(uv.y-2.5/15.0)<0.01){
-            //return vec3(-10.0,0.5,0.0);
-            //}
 
             return vec3(rx,ry,rz);
 
@@ -469,7 +463,7 @@
 </script>
 
 <script id="fragmentShaderJ" type="x-shader/x-fragment">
-    //todo: j null setzen nachdem hinzuaddiet bei e shader
+
 
     uniform vec2 resolution;
     uniform float size;
@@ -566,26 +560,12 @@
                 vec2 fp3 = getFieldPoint(position+velocity*dt);
 
 
-                if(abs(fp2.x-uv.x)<=0.001&&abs(fp2.y-uv.y)<=0.0001){//particle belongs to current field point
-                j=vec3(0.0,0.01,0.0);
-                //case1: particle was in another fieldpoint before
-                //if(fp1.x!=fp2.x&&fp1.x!=fp2.x){
-                //j+=vec3(0.0,0.01,0.0);
-                //}
+                if(abs(fp2.x-uv.x)<=0.001&&abs(fp2.y-uv.y)<=0.0001){
+                //particle belongs to current field point
 
-                //case2: particle will belong to another fieldpoint
-                //if(fp3.x!=fp2.x&&fp2.x!=fp3.x){
-                //j-=vec3(0.0,0.01,0.0);
-
-                //}
-
-                //case3: particle stays with fieldpoint, nothing happens
-                //if(init==1){//todo:
-
-                //j+=vec3(0.0,0.01,0.0);
+                j+=velocity*0.001;//scale it down a little
 
 
-                //}
 
 
                 }
