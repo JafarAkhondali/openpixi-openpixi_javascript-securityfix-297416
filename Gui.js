@@ -6,7 +6,7 @@ function Gui(){
         this.gy = 0.0;
         this.Particles = 1;
         this.dt = 0.01;
-        this.fieldpoints =5;
+        this.gridsize =5;
 
         this.Bx = 0.0;
         this.By = 0.0;
@@ -32,7 +32,7 @@ function Gui(){
 
     gui.add(text, 'Particles',1,10000);
     gui.add(text,'dt',0.0,10.0);
-    gui.add(text,'fieldpoints',2,20).step(1);
+    gui.add(text,'gridsize',2,20).step(1);
     gui.add(text, 'gy',-0.9999,0.9999);
 
     gui.add(text,'m',0.0,1.0);

@@ -6,7 +6,7 @@ function init(){
     //set class variables according to gui values
     B = new THREE.Vector3(gui.vars().Bx,gui.vars().By, gui.vars().Bz);
     E = new THREE.Vector3(gui.vars().Ex,gui.vars().Ey, gui.vars().Ez);
-    FSIZE = gui.vars().fieldpoints;
+    FSIZE = gui.vars().gridsize;
 
 
 
@@ -16,7 +16,7 @@ function init(){
 
 
     //initiate simulator
-    simul = new simulator(WIDTH, renderer);
+    simul = new simulator(PWIDTH, renderer);
     simul.init();
 
 
@@ -63,20 +63,11 @@ function init(){
     function initParticleSystem(){
 
         //the texture from which the particles' position is read
-        uniforms = {
-            "lookup": { type: "t", value: null }
-        };
+
 
 
         //assigning the shaders
-        material = new THREE.ShaderMaterial({
-
-            uniforms: uniforms,
-            vertexShader: document.getElementById('particleVertexShader').textContent,
-            fragmentShader: document.getElementById('particleFragmentShader').textContent
-
-
-        });
+        material = Shaders.getParticleShader();
 
         //vertices at random position represent the particles
         geometry = new THREE.Geometry();
@@ -87,13 +78,13 @@ function init(){
         var x=0;
         for(var p = 0; p<gui.vars().Particles;p++){
 
-            if(x==WIDTH){
+            if(x==PWIDTH){
                 x=0;
                 y++;
             }
 
-            pX=(0.5+x)/WIDTH;
-            pY=(0.5+y)/WIDTH;
+            pX=(0.5+x)/PWIDTH;
+            pY=(0.5+y)/PWIDTH;
 
             x++;
 
@@ -122,7 +113,7 @@ function init(){
         //    i=0;
         //}
 
-        uniforms.lookup.value = simul.currPos();
+        material.uniforms.lookup.value = simul.currPos();
 
         render();
         stats.update();

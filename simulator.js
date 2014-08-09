@@ -34,126 +34,38 @@ function simulator(width,renderer){
 
 
 
-    var passThruUniforms = {
 
-        resolution: { type: "v2", value: new THREE.Vector2(width, width) },
-        texture: { type: "t", value: null }
-    };
 
-    var passThruShader = new THREE.ShaderMaterial( {
-
-        uniforms: passThruUniforms,
-        vertexShader: document.getElementById( 'passThruVertexShader' ).textContent,
-        fragmentShader: document.getElementById( 'passThruFragmentShader' ).textContent
-
-    } );
+    var passThruShader = Shaders.getPassThruShader();
 
     //particle shaders
-    var positionShader = new THREE.ShaderMaterial( {
-
-        uniforms: {
-            dt : { type: "f",value: DT},
-            resolution: { type: "v2", value: new THREE.Vector2( width, width ) },
-            texturePosition: { type: "t", value: null },
-            textureVelocity: { type: "t", value: null }
-        },
-        vertexShader: document.getElementById( 'passThruVertexShader' ).textContent,
-        fragmentShader: document.getElementById( 'fragmentShaderPosition' ).textContent
-
-    } );
+    var positionShader = Shaders.getPositionShader();
 
 
-    var velocityShader = new THREE.ShaderMaterial( {
-
-        uniforms: {
-            dt : { type: "f",value: DT},
-            resolution: { type: "v2", value: new THREE.Vector2( width, width ) },
-            texturePosition: { type: "t", value: null },
-            textureVelocity: { type: "t", value: null },
-            textureAcceleration: {type: "t", value: null}
-        },
-
-        vertexShader: document.getElementById( 'passThruVertexShader' ).textContent,
-        fragmentShader: document.getElementById( 'fragmentShaderVelocity' ).textContent
-
-    } );
+    var velocityShader = Shaders.getVelocityShader();
 
 
 
-    var accelerationShader = new THREE.ShaderMaterial({
-
-        uniforms: {
-            dt : { type: "f",value: DT},
-            gy: {type: "f", value: gui.vars().gy},
-            size: {type: "f", value:null},
-            resolution: { type: "v2", value: new THREE.Vector2(width,width)},
-            textureVelocity: { type: "t", value: null},
-            textureMQ: {type:"t", value: null},
-            textureFieldB: {type: "t", value: null},
-            textureFieldE: {type: "t", value: null},
-            texturePosition: {type: "t", value: null},
-
-        },
-        vertexShader: document.getElementById('passThruVertexShader').textContent,
-        fragmentShader: document.getElementById('fragmentShaderAcceleration').textContent
-
-    });
+    var accelerationShader = Shaders.getAccelerationShader();
 
 
     //field shaders
     var w = Math.ceil(Math.sqrt(FSIZE));
     var res = new THREE.Vector2(w*FSIZE,w*FSIZE);
 
-    var fieldEShader = new THREE.ShaderMaterial({
-        uniforms: {
-            dt : { type: "f",value: DT},
-            resolution: {type: "v2",value: res},
-            size: {type: "f",value: FSIZE},
-            textureFieldE:{type: "t",value :null},
-            textureFieldB:{type: "t",value :null},
-            textureFieldJ:{type:"t",value: null}
+    var gridEShader = Shaders.getGridEShader();
 
-        },
-        vertexShader: document.getElementById('passThruVertexShader').textContent,
-        fragmentShader: document.getElementById('fragmentShaderFieldE').textContent
-    });
+    var gridBShader = Shaders.getGridBShader();
 
-    var fieldBShader = new THREE.ShaderMaterial({
-        uniforms: {
-            dt : { type: "f",value: DT},
-            resolution: {type: "v2",value: res},
-            size: {type: "f",value: FSIZE},
-            textureFieldE:{type: "t",value :null},
-            textureFieldB:{type: "t",value :null}
-
-        },
-        vertexShader: document.getElementById('passThruVertexShader').textContent,
-        fragmentShader: document.getElementById('fragmentShaderFieldB').textContent
-    });
-
-
-    var fieldJShader = new THREE.ShaderMaterial({
-        uniforms:{
-            resolution : {type: "v2",value: res},
-            dt: {type: "f", value: null},
-            size : {type: "f", value: FSIZE},
-            texturePosition : {type: "t", value: null},
-            textureVelocity : {type: "t", value: null},
-            textureJ : {type: "t", value: null}
-        },
-
-        vertexShader: document.getElementById('passThruVertexShader').textContent,
-        fragmentShader: document.getElementById('fragmentShaderJ').textContent
-
-    });
+    var fieldJShader = Shaders.getGridJShader();
 
 
     //vector display shaders
-    var  vecShaderE = new THREE.ShaderMaterial({
+    /*var  vecShaderE = new THREE.ShaderMaterial({
         uniforms:{
-            size:{type:"f",value: FSIZE},
-            width:{type:"f",value: Math.ceil(Math.sqrt(FSIZE))},
-            textureFieldE:{type:"t",value:null}
+            gridsize:{type:"f",value: FSIZE},
+
+            textureGridE:{type:"t",value:null}
         },
         vertexShader: document.getElementById('vectorVertexShaderE').textContent,
         fragmentShader: document.getElementById('vectorFragmentShaderE').textContent
@@ -161,19 +73,22 @@ function simulator(width,renderer){
 
     var  vecShaderB = new THREE.ShaderMaterial({
         uniforms:{
-            size:{type:"f",value: FSIZE},
-            width:{type:"f",value: Math.ceil(Math.sqrt(FSIZE))},
-            textureFieldB:{type:"t",value:null}
+            gridsize:{type:"f",value: FSIZE},
+
+            textureGridB:{type:"t",value:null}
         },
         vertexShader: document.getElementById('vectorVertexShaderB').textContent,
         fragmentShader: document.getElementById('vectorFragmentShaderB').textContent
-    });
+    });*/
+
+    var vecShaderE = Shaders.getVectorEShader();
+    var vecShaderB = Shaders.getVectorBShader();
 
     //end shaders
 
     var pingpong = true;
     var rtPosition1, rtPosition2, rtVelocity1, rtVelocity2, rtAcceleration1, rtAcceleration2,rtMassCharge;
-    var rtfieldB1,rtfieldB2,rtfieldE1,rtfieldE2;
+    var rtgridB1,rtgridB2,rtgridE1,rtgridE2;
     var rtfieldJ0,rtfieldJ1;
 
 
@@ -222,10 +137,10 @@ function simulator(width,renderer){
 
         var dtJ = generateFieldTex(new THREE.Vector3(0,0,0));
 
-        var dtfieldE = generateFieldTex(new THREE.Vector3(E.x, E.y, E.z));
-        var dtfieldB = BgenerateFieldTex(new THREE.Vector3(B.x, B.y, B.z));
-        //var dtfieldB = generateFieldTexB();//FIXME DEBUG
-        //var dtfieldE = generateFieldTexE();
+        var dtgridE = generateFieldTex(new THREE.Vector3(E.x, E.y, E.z));
+        var dtgridB = BgenerateFieldTex(new THREE.Vector3(B.x, B.y, B.z));
+        var dtgridB = generateFieldTexB();//FIXME DEBUG
+        var dtgridE = generateFieldTexE();
 
 
 
@@ -233,17 +148,17 @@ function simulator(width,renderer){
 
         var w = Math.ceil(Math.sqrt(FSIZE));
 
-        rtfieldE1 = getRenderTarget(FSIZE*w,FSIZE*w);
-        rtfieldE2 = rtfieldE1.clone();
+        rtgridE1 = getRenderTarget(FSIZE*w,FSIZE*w);
+        rtgridE2 = rtgridE1.clone();
 
-        renderTexture(new THREE.Vector2(FSIZE*w,FSIZE*w),dtfieldE,rtfieldE1);
-        renderTexture(new THREE.Vector2(FSIZE*w,FSIZE*w),dtfieldE,rtfieldE2);
+        renderTexture(new THREE.Vector2(FSIZE*w,FSIZE*w),dtgridE,rtgridE1);
+        renderTexture(new THREE.Vector2(FSIZE*w,FSIZE*w),dtgridE,rtgridE2);
 
-        rtfieldB1 = getRenderTarget(FSIZE*w,FSIZE*w);
-        rtfieldB2 = rtfieldB1.clone();
+        rtgridB1 = getRenderTarget(FSIZE*w,FSIZE*w);
+        rtgridB2 = rtgridB1.clone();
 
-        renderTexture(new THREE.Vector2(FSIZE*w,FSIZE*w),dtfieldB,rtfieldB1);
-        renderTexture(new THREE.Vector2(FSIZE*w,FSIZE*w),dtfieldB,rtfieldB2);
+        renderTexture(new THREE.Vector2(FSIZE*w,FSIZE*w),dtgridB,rtgridB1);
+        renderTexture(new THREE.Vector2(FSIZE*w,FSIZE*w),dtgridB,rtgridB2);
 
 
         rtfieldJ0 = getRenderTarget(FSIZE*w,FSIZE*w);
@@ -252,15 +167,15 @@ function simulator(width,renderer){
         renderTexture(new THREE.Vector2(FSIZE*w,FSIZE*w),dtJ,rtfieldJ1);
 
         //fixme debug
-        showTex(rtfieldB1);
+        showTex(rtgridE1);
         //field display vectors
 
 
 
             var step = BOUNDS/(FSIZE);
 
-            vecShaderB.uniforms.textureFieldB.value=rtfieldB1;
-            vecShaderE.uniforms.textureFieldE.value=rtfieldE1;
+            vecShaderB.uniforms.textureGridB.value=rtgridB1;
+            vecShaderE.uniforms.textureGridE.value=rtgridE1;
 
         for( var z = -BOUNDS/2; z<BOUNDS/2;z+=step){
 
@@ -300,32 +215,32 @@ function simulator(width,renderer){
 
 
 
-            renderAcceleration(rtPosition1,rtVelocity1,rtfieldB1,rtfieldE1, rtAcceleration2);
+            renderAcceleration(rtPosition1,rtVelocity1,rtgridB1,rtgridE1, rtAcceleration2);
             renderVelocity(rtPosition1,rtAcceleration1, rtVelocity1, rtVelocity2);
 
             renderFieldJ(rtPosition1,rtVelocity1,rtfieldJ1);
 
             renderPosition(rtPosition1, rtVelocity1, rtPosition2);
 
-            renderFieldE(rtfieldB1,rtfieldE1,rtfieldJ1,rtfieldE2);
-            renderFieldB(rtfieldB1,rtfieldE1,rtfieldB2);
+            renderFieldE(rtgridB1,rtgridE1,rtfieldJ1,rtgridE2);
+            renderFieldB(rtgridB1,rtgridE1,rtgridB2);
 
-            renderVectors(rtfieldB1,rtfieldE1);
+            renderVectors(rtgridB1,rtgridE1);
 
 
         } else {
 
-            renderAcceleration(rtPosition2,rtVelocity2,rtfieldB2,rtfieldE2, rtAcceleration1);
+            renderAcceleration(rtPosition2,rtVelocity2,rtgridB2,rtgridE2, rtAcceleration1);
             renderVelocity(rtPosition2,rtAcceleration2, rtVelocity2, rtVelocity1);
 
             renderFieldJ(rtPosition2,rtVelocity2,rtfieldJ1);
 
             renderPosition(rtPosition2, rtVelocity2, rtPosition1);
 
-            renderFieldE(rtfieldB2,rtfieldE2,rtfieldJ1,rtfieldE1);
-            renderFieldB(rtfieldB2,rtfieldE2,rtfieldB1);
+            renderFieldE(rtgridB2,rtgridE2,rtfieldJ1,rtgridE1);
+            renderFieldB(rtgridB2,rtgridE2,rtgridB1);
 
-            renderVectors(rtfieldB2,rtfieldE2);
+            renderVectors(rtgridB2,rtgridE2);
 
         }
 
@@ -352,22 +267,21 @@ function simulator(width,renderer){
         mesh.material = velocityShader;
 
         velocityShader.uniforms.dt.value=DT;
-        velocityShader.uniforms.texturePosition.value = position;
         velocityShader.uniforms.textureVelocity.value = velocity;
         velocityShader.uniforms.textureAcceleration.value = acceleration;
         renderer.render(ppscene, camera, output);
     }
     //render to texture using AccelerationShader
-    function renderAcceleration(position, velocity,fieldB,fieldE, output){
+    function renderAcceleration(position, velocity,gridB,gridE, output){
 
         mesh.material = accelerationShader;
 
         accelerationShader.uniforms.dt.value=DT;
         accelerationShader.uniforms.texturePosition.value = position;
         accelerationShader.uniforms.textureVelocity.value = velocity;
-        accelerationShader.uniforms.textureFieldB.value = fieldB;
-        accelerationShader.uniforms.textureFieldE.value = fieldE;
-        accelerationShader.uniforms.size.value = FSIZE;
+        accelerationShader.uniforms.textureGridB.value = gridB;
+        accelerationShader.uniforms.textureGridE.value = gridE;
+        accelerationShader.uniforms.gridsize.value = FSIZE;
         accelerationShader.uniforms.textureMQ.value = rtMassCharge;
         accelerationShader.uniforms.gy.vlaue= gui.vars().gy;
 
@@ -376,29 +290,29 @@ function simulator(width,renderer){
     }
 
     //render to texture using FieldE shader
-    function renderFieldE(fieldB,fieldE,fieldJ,output){
+    function renderFieldE(gridB,gridE,fieldJ,output){
 
-        mesh.material = fieldEShader;
+        mesh.material = gridEShader;
 
 
-        fieldEShader.uniforms.dt.value=DT;
-        fieldEShader.uniforms.textureFieldE.value = fieldE;
-        fieldEShader.uniforms.textureFieldB.value = fieldB;
+        gridEShader.uniforms.dt.value=DT;
+        gridEShader.uniforms.textureGridE.value = gridE;
+        gridEShader.uniforms.textureGridB.value = gridB;
 
-        fieldEShader.uniforms.textureFieldJ.value = fieldJ;
+        gridEShader.uniforms.textureGridJ.value = fieldJ;
 
         renderer.render(ppscene,camera,output);
     }
 
     //render to texture using FieldB shader
-    function renderFieldB(fieldB,fieldE,output){
+    function renderFieldB(gridB,gridE,output){
 
-        mesh.material = fieldBShader;
+        mesh.material = gridBShader;
 
 
-        fieldBShader.uniforms.dt.value=DT;
-        fieldBShader.uniforms.textureFieldE.value = fieldE;
-        fieldBShader.uniforms.textureFieldB.value = fieldB;
+        gridBShader.uniforms.dt.value=DT;
+        gridBShader.uniforms.textureGridE.value = gridE;
+        gridBShader.uniforms.textureGridB.value = gridB;
 
         renderer.render(ppscene,camera,output);
 
@@ -411,7 +325,7 @@ function simulator(width,renderer){
         fieldJShader.uniforms.dt.value = DT;
         fieldJShader.uniforms.texturePosition.value = position;
         fieldJShader.uniforms.textureVelocity.value = velocity;
-        fieldJShader.uniforms.textureJ.value = rtfieldJ0;
+
 
         renderer.render(ppscene,camera,output);
 
@@ -420,18 +334,18 @@ function simulator(width,renderer){
 
     //update fieldtexture for vectors
 
-    function renderVectors(fieldB,fieldE){
+    function renderVectors(gridB,gridE){
 
-        vecShaderE.uniforms.textureFieldE.value=fieldE;
-        vecShaderB.uniforms.textureFieldB.value=fieldB;
+        vecShaderE.uniforms.textureGridE.value=gridE;
+        vecShaderB.uniforms.textureGridB.value=gridB;
 
     }
 
     //initialization: render to texture using passthroughshader
     function renderTexture( resolution,input, output ) {
         mesh.material = passThruShader;
-        passThruUniforms.resolution.value = resolution;
-        passThruUniforms.texture.value = input;
+        passThruShader.uniforms.resolution.value = resolution;
+        passThruShader.uniforms.texture.value = input;
         renderer.render( ppscene, camera, output );
 
 
