@@ -67,7 +67,6 @@ function simulator(width,renderer){
 
         uniforms: {
             dt : { type: "f",value: DT},
-            init: {type: "i",value:1},
             resolution: { type: "v2", value: new THREE.Vector2( width, width ) },
             texturePosition: { type: "t", value: null },
             textureVelocity: { type: "t", value: null },
@@ -85,24 +84,18 @@ function simulator(width,renderer){
 
         uniforms: {
             dt : { type: "f",value: DT},
+            gy: {type: "f", value: text.gy},
+            size: {type: "f", value:null},
             resolution: { type: "v2", value: new THREE.Vector2(width,width)},
             textureVelocity: { type: "t", value: null},
-            textureAcceleration: {type: "t", value: null},//FIXME: not needed?
             textureMQ: {type:"t", value: null},
-            gy: {type: "f", value: text.gy},
-            textureFieldPos: {type : "t", value: null}, //FIXME: not needed?
             textureFieldB: {type: "t", value: null},
             textureFieldE: {type: "t", value: null},
             texturePosition: {type: "t", value: null},
-            size: {type: "f", value:null}
-
-
 
         },
         vertexShader: document.getElementById('passThruVertexShader').textContent,
         fragmentShader: document.getElementById('fragmentShaderAcceleration').textContent
-
-
 
     });
 
@@ -110,11 +103,6 @@ function simulator(width,renderer){
     //field shaders
     var w = Math.ceil(Math.sqrt(FSIZE));
     var res = new THREE.Vector2(w*FSIZE,w*FSIZE);
-
-    var ppsceneF = new THREE.Scene();
-    var meshF = new THREE.Mesh( new THREE.PlaneGeometry(2,2));
-
-    ppsceneF.add( meshF );
 
     var fieldEShader = new THREE.ShaderMaterial({
         uniforms: {
@@ -161,11 +149,8 @@ function simulator(width,renderer){
 
 
     //vector display shaders
-
-
     var  vecShaderE = new THREE.ShaderMaterial({
         uniforms:{
-            test:{type:"f",value:null},
             size:{type:"f",value: FSIZE},
             width:{type:"f",value: Math.ceil(Math.sqrt(FSIZE))},
             textureFieldE:{type:"t",value:null}
@@ -315,7 +300,7 @@ function simulator(width,renderer){
 
 
 
-            renderAcceleration(rtPosition1,rtVelocity1, rtAcceleration1,rtfieldB1,rtfieldE1, rtAcceleration2);
+            renderAcceleration(rtPosition1,rtVelocity1,rtfieldB1,rtfieldE1, rtAcceleration2);
             renderVelocity(rtPosition1,rtAcceleration1, rtVelocity1, rtVelocity2);
 
             renderFieldJ(rtPosition1,rtVelocity1,rtfieldJ1);
@@ -330,7 +315,7 @@ function simulator(width,renderer){
 
         } else {
 
-            renderAcceleration(rtPosition2,rtVelocity2, rtAcceleration2,rtfieldB2,rtfieldE2, rtAcceleration1);
+            renderAcceleration(rtPosition2,rtVelocity2,rtfieldB2,rtfieldE2, rtAcceleration1);
             renderVelocity(rtPosition2,rtAcceleration2, rtVelocity2, rtVelocity1);
 
             renderFieldJ(rtPosition2,rtVelocity2,rtfieldJ1);
@@ -373,14 +358,13 @@ function simulator(width,renderer){
         renderer.render(ppscene, camera, output);
     }
     //render to texture using AccelerationShader
-    function renderAcceleration(position, velocity, acceleration,fieldB,fieldE, output){
+    function renderAcceleration(position, velocity,fieldB,fieldE, output){
 
         mesh.material = accelerationShader;
 
         accelerationShader.uniforms.dt.value=DT;
         accelerationShader.uniforms.texturePosition.value = position;
         accelerationShader.uniforms.textureVelocity.value = velocity;
-        accelerationShader.uniforms.textureAcceleration.value = acceleration;
         accelerationShader.uniforms.textureFieldB.value = fieldB;
         accelerationShader.uniforms.textureFieldE.value = fieldE;
         accelerationShader.uniforms.size.value = FSIZE;
@@ -394,7 +378,7 @@ function simulator(width,renderer){
     //render to texture using FieldE shader
     function renderFieldE(fieldB,fieldE,fieldJ,output){
 
-        meshF.material = fieldEShader;
+        mesh.material = fieldEShader;
 
 
         fieldEShader.uniforms.dt.value=DT;
@@ -403,34 +387,34 @@ function simulator(width,renderer){
 
         fieldEShader.uniforms.textureFieldJ.value = fieldJ;
 
-        renderer.render(ppsceneF,camera,output);
+        renderer.render(ppscene,camera,output);
     }
 
     //render to texture using FieldB shader
     function renderFieldB(fieldB,fieldE,output){
 
-        meshF.material = fieldBShader;
+        mesh.material = fieldBShader;
 
 
         fieldBShader.uniforms.dt.value=DT;
         fieldBShader.uniforms.textureFieldE.value = fieldE;
         fieldBShader.uniforms.textureFieldB.value = fieldB;
 
-        renderer.render(ppsceneF,camera,output);
+        renderer.render(ppscene,camera,output);
 
     }
 
     function renderFieldJ(position,velocity,output){
 
-        meshF.material = fieldJShader;
+        mesh.material = fieldJShader;
 
         fieldJShader.uniforms.dt.value = DT;
         fieldJShader.uniforms.texturePosition.value = position;
         fieldJShader.uniforms.textureVelocity.value = velocity;
         fieldJShader.uniforms.textureJ.value = rtfieldJ0;
 
-        renderer.render(ppsceneF,camera,output);
-        fieldJShader.uniforms.init =0;
+        renderer.render(ppscene,camera,output);
+
 
     }
 

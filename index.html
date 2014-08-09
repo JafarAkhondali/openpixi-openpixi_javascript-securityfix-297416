@@ -50,8 +50,8 @@
 <!--particle acceleration, position and velocity shaders -->
 <script id="fragmentShaderPosition" type="x-shader/x-fragment">
 
-			uniform vec2 resolution;
 			uniform float dt;
+			uniform vec2 resolution;
 			uniform sampler2D textureVelocity;
 			uniform sampler2D texturePosition;
 
@@ -94,35 +94,28 @@
 			const float UPPER_BOUNDS = 200.0;
 			const float LOWER_BOUNDS = -UPPER_BOUNDS;
 
+            //wall stiffnes
 			const float bouncy = 1.0;
-
 
 			void main()	{
 
 				vec2 uv = gl_FragCoord.xy / resolution.xy;
 
-
-
 				vec3 oldPosition = texture2D( texturePosition, uv ).xyz;
 				vec3 oldVelocity = texture2D( textureVelocity, uv ).xyz;
 				vec3 acceleration = texture2D( textureAcceleration, uv).xyz;
-
 
 				vec3 velocity=oldVelocity+acceleration*dt;
 
                 //bounding box
                 //wall
-                // if ((oldPosition.x + velocity.x ) < LOWER_BOUNDS) velocity.x = -velocity.x*bouncy;
+                //if ((oldPosition.x + velocity.x ) < LOWER_BOUNDS) velocity.x = -velocity.x*bouncy;
 				//if ((oldPosition.y + velocity.y ) < LOWER_BOUNDS) velocity.y = -velocity.y*bouncy;
 				//if ((oldPosition.z + velocity.z ) < LOWER_BOUNDS) velocity.z = -velocity.z*bouncy;
 
 				//if ((oldPosition.x + velocity.x ) > UPPER_BOUNDS) velocity.x = -velocity.x*bouncy;
 				//if ((oldPosition.y + velocity.y ) > UPPER_BOUNDS) velocity.y = -velocity.y*bouncy;
 				//if ((oldPosition.z + velocity.z ) > UPPER_BOUNDS) velocity.z = -velocity.z*bouncy;
-
-                //periodic
-                //do not change velocity
-
 
 				gl_FragColor=vec4(velocity, 1.0);
 
@@ -132,29 +125,23 @@
 
 <script id="fragmentShaderAcceleration" type="x-shader/x-fragment">
 
-
-
-            uniform vec2 resolution;
             uniform float dt;
+            uniform float gy;
+            uniform vec2 resolution;
 			uniform sampler2D textureVelocity;
 			uniform sampler2D textureMQ;
-            float gy;
 
             uniform float size;
-
             uniform sampler2D textureFieldB;
             uniform sampler2D textureFieldE;
             uniform sampler2D texturePosition;
 
-            uniform sampler2D textureField;
-
             const float drag = 0.0005;
+
 
             vec2 getFieldPoint(vec3 pos){
 
-
                 float maxval = 400.0;
-
 
                 //map particles position  to [0,size]
                 float x = ((pos.x+maxval/2.0)/maxval)*(size);
@@ -166,22 +153,16 @@
                 float ly = floor(y);
                 float lz = floor(z);
 
-
                 float width = ceil(sqrt(size));
-
 
                 float row = floor(lz/width);
                 float col = mod(lz,width);
 
-
                 float qu = col*(size)+lx;
                 float qv = row*(size)+ly;
 
-
-
                 qu = (qu+0.5)/(size*width);
                 qv = (qv+0.5)/(size*width);
-
 
                 return vec2(qu,qv);
 
@@ -192,11 +173,9 @@
 
 				vec2 uv = gl_FragCoord.xy / resolution.xy;
 
-
                 vec3 pos = texture2D(texturePosition,uv).xyz;
 
                 vec2 quv = getFieldPoint(pos);
-
 
                 vec3 B = texture2D(textureFieldB,quv).xyz;
                 vec3 E = texture2D(textureFieldE,quv).xyz;
@@ -207,17 +186,16 @@
                 vec3 v = texture2D(textureVelocity,uv).xyz;
                 vec3 acceleration =  -drag * v + m*gy + (q/m*(E+cross(v,B)));
 
-
 				gl_FragColor=vec4(acceleration,1.0);
 
 
 				}
 
 
-
 </script>
 
 <script id="fragmentShaderFieldE" type="x-shader/x-fragment">
+
            uniform sampler2D textureFieldE;
            uniform sampler2D textureFieldB;
            uniform sampler2D textureFieldJ;
@@ -292,14 +270,6 @@
             vec3 dy = texture2D(textureFieldB, vec2(uv.x,vecuv.y)).xyz;
             vec3 dz = texture2D(textureFieldB, vec2(vecuv.z,vecuv.w)).xyz;
 
-            //float rxl = (dy.z-bold.z)/h;
-            //float rxr = (dz.y-bold.y)/h;
-
-            //float ryl = (dz.x-bold.x)/h;
-            //float ryr = (dx.z-bold.z)/h;
-
-            //float rzl = (dx.y-bold.y)/h;
-            //float rzr = (dy.x-bold.x)/h;
 
             float rxl = (bold.z-dy.z)/h;
             float rxr = (bold.y-dz.y)/h;
@@ -315,13 +285,6 @@
             float ry = ryl-ryr;
             float rz = rzl-rzr;
 
-            //if(abs(rx)>0.1||abs(ry)>1.0||abs(rz)>0.1){
-            //return vec3(0.0,0.0,0.0);
-            //}
-
-            //if(vecuv.w == 9.0){
-            //return vec3(0.0,0.0,0.0);
-            //}
 
             return vec3(rx,ry,rz);
 
@@ -468,7 +431,7 @@
     uniform vec2 resolution;
     uniform float size;
     uniform float dt;
-    uniform int init;
+
 
     uniform sampler2D texturePosition;
     uniform sampler2D textureVelocity;
@@ -632,13 +595,12 @@
 uniform sampler2D textureFieldE;
 uniform float size;
 uniform float width;
-uniform float test;
+
 
 vec2 getUV(vec3 pos){
 
 
                 float maxval = 400.0;
-
 
                 //map particles position  to [0,size]
                 float x = ((pos.x+maxval/2.0)/maxval)*(size);
