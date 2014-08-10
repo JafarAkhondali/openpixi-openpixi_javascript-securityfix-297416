@@ -614,9 +614,9 @@ Shaders = {
                     "vec3 velocity = texture2D(textureVelocity,look).xyz;",
                     "vec2 gp = getGridPoint(position);",
                     "if(abs(gp.x-uv.x)<=0.001&&abs(gp.y-uv.y)<=0.001){",
-                        //particle belongs to current field point
 
-                        "j=velocity*0.001;",//scale it down a little
+                         "j=velocity*0.001;",//scale it down a little
+                         //"j=vec3(0.0,0.01,0.0);",
 
                     "}",
 
