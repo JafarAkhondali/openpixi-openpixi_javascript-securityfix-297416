@@ -139,136 +139,77 @@ function simulator(width,renderer){
 
     this.simulate = function(){
 
-        if(pingpong){
+        var dt = gui.vars().dt;
 
-
-
-
-            renderAcceleration(rtPosition1,rtVelocity1,rtgridB1,rtgridE1, rtAcceleration2);
-            renderVelocity(rtPosition1,rtAcceleration1, rtVelocity1, rtVelocity2);
-
-            renderFieldJ(rtPosition1,rtVelocity1,rtgridJ1);
-
-            renderPosition(rtPosition1, rtVelocity1, rtPosition2);
-
-            renderFieldE(rtgridB1,rtgridE1,rtgridJ1,rtgridE2);
-            renderFieldB(rtgridB1,rtgridE1,rtgridB2);
-
-            renderVectors(rtgridB1,rtgridE1);
-
-
-        } else {
-
-            renderAcceleration(rtPosition2,rtVelocity2,rtgridB2,rtgridE2, rtAcceleration1);
-            renderVelocity(rtPosition2,rtAcceleration2, rtVelocity2, rtVelocity1);
-
-            renderFieldJ(rtPosition2,rtVelocity2,rtgridJ1);
-
-            renderPosition(rtPosition2, rtVelocity2, rtPosition1);
-
-            renderFieldE(rtgridB2,rtgridE2,rtgridJ1,rtgridE1);
-            renderFieldB(rtgridB2,rtgridE2,rtgridB1);
-
-            renderVectors(rtgridB2,rtgridE2);
-
-        }
-
-        pingpong= !pingpong;
-
-
-    }
-    //render to texture using positionShader
-
-    function renderPosition(position, velocity, output) {
-
-        quad.material = positionShader;
-
-        positionShader.uniforms.dt.value=DT;
-        positionShader.uniforms.texturePosition.value = position;
-        positionShader.uniforms.textureVelocity.value = velocity;
-        renderer.render(ppscene, ppcamera, output);
-        currentPosition = output;
-
-
-    }
-    //render to texture using velocityShader
-    function renderVelocity(position,acceleration, velocity, output) {
-        quad.material = velocityShader;
-
-        velocityShader.uniforms.dt.value=DT;
-        velocityShader.uniforms.textureVelocity.value = velocity;
-        velocityShader.uniforms.textureAcceleration.value = acceleration;
-        renderer.render(ppscene, ppcamera, output);
-    }
-    //render to texture using AccelerationShader
-    function renderAcceleration(position, velocity,gridB,gridE, output){
-
+        //Acceleration
         quad.material = accelerationShader;
-
-        accelerationShader.uniforms.dt.value=DT;
-        accelerationShader.uniforms.texturePosition.value = position;
-        accelerationShader.uniforms.textureVelocity.value = velocity;
-        accelerationShader.uniforms.textureGridB.value = gridB;
-        accelerationShader.uniforms.textureGridE.value = gridE;
+        accelerationShader.uniforms.dt.value = dt;
+        accelerationShader.uniforms.textureVelocity.value = pingpong? rtVelocity1 : rtVelocity2;
+        accelerationShader.uniforms.textureGridE.value = pingpong? rtgridE1 : rtgridE2;
+        accelerationShader.uniforms.textureGridB.value = pingpong? rtgridB1 : rtgridB2;
+        accelerationShader.uniforms.texturePosition.value = pingpong? rtPosition1 : rtPosition2;
         accelerationShader.uniforms.gridsize.value = FSIZE;
         accelerationShader.uniforms.textureMQ.value = rtMassCharge;
         accelerationShader.uniforms.gy.vlaue= gui.vars().gy;
 
-        renderer.render(ppscene,ppcamera,output);
+        renderer.render(ppscene,ppcamera,pingpong? rtAcceleration2:rtAcceleration1);
 
-    }
+        quad.material = accelerationShader;
 
-    //render to texture using FieldE shader
-    function renderFieldE(gridB,gridE,fieldJ,output){
+        //Velocity
+        quad.material = velocityShader;
+        velocityShader.uniforms.dt.value = dt;
+        velocityShader.uniforms.textureVelocity.value = pingpong? rtVelocity1 : rtVelocity2;
+        velocityShader.uniforms.textureAcceleration.value = pingpong? rtAcceleration1 : rtAcceleration2;
 
+
+        renderer.render(ppscene,ppcamera,pingpong? rtVelocity2:rtVelocity1);
+        //Position
+        quad.material = positionShader;
+        positionShader.uniforms.dt.value = dt;
+        positionShader.uniforms.texturePosition.value = pingpong? rtPosition1 : rtPosition2;
+        positionShader.uniforms.textureVelocity.value = pingpong? rtVelocity1 : rtVelocity2;
+
+
+        renderer.render(ppscene,ppcamera,pingpong? rtPosition2:rtPosition1);
+
+        //E force
         quad.material = gridEShader;
+        gridEShader.uniforms.dt.value = dt;
+        gridEShader.uniforms.textureGridE.value = pingpong? rtgridE1 : rtgridE2;
+        gridEShader.uniforms.textureGridB.value = pingpong? rtgridB1 : rtgridB2;
 
 
-        gridEShader.uniforms.dt.value=DT;
-        gridEShader.uniforms.textureGridE.value = gridE;
-        gridEShader.uniforms.textureGridB.value = gridB;
+        renderer.render(ppscene,ppcamera, pingpong? rtgridE2 : rtgridE1);
 
-        gridEShader.uniforms.textureGridJ.value = fieldJ;
-
-        renderer.render(ppscene,ppcamera,output);
-    }
-
-    //render to texture using FieldB shader
-    function renderFieldB(gridB,gridE,output){
-
+        //B force
         quad.material = gridBShader;
+        gridBShader.uniforms.dt.value = dt;
+        gridBShader.uniforms.textureGridB.value = pingpong? rtgridB1 : rtgridB2;
+        gridBShader.uniforms.textureGridE.value = pingpong? rtgridE1 : rtgridE2;
 
 
-        gridBShader.uniforms.dt.value=DT;
-        gridBShader.uniforms.textureGridE.value = gridE;
-        gridBShader.uniforms.textureGridB.value = gridB;
+        renderer.render(ppscene,ppcamera,pingpong? rtgridB2 : rtgridB1);
 
-        renderer.render(ppscene,ppcamera,output);
+        //J force
+        gridJShader.uniforms.dt.value = dt;
+        gridJShader.uniforms.texturePosition.value = pingpong? rtPosition1 : rtPosition2;
+        gridJShader.uniforms.textureVelocity.value = pingpong? rtVelocity1 : rtVelocity2;
+
+        //display vectors
+        vecShaderE.uniforms.textureGridE.value=pingpong? rtgridE1 : rtgridE2;
+        vecShaderB.uniforms.textureGridB.value=pingpong? rtgridB1 : rtgridB2;
+
+        //set variables
+        currentPosition = pingpong? rtPosition1:rtPosition2;
+        currentE = pingpong? rtgridE1:rtgridE2;
+        currentB = pingpong? rtgridB1:rtgridB2;
+
+        pingpong = !pingpong;
+
 
     }
 
-    function renderFieldJ(position,velocity,output){
-
-        quad.material = gridJShader;
-
-        gridJShader.uniforms.dt.value = DT;
-        gridJShader.uniforms.texturePosition.value = position;
-        gridJShader.uniforms.textureVelocity.value = velocity;
-
-
-        renderer.render(ppscene,ppcamera,output);
-
-
-    }
-
-    //update fieldtexture for vectors
-
-    function renderVectors(gridB,gridE){
-
-        vecShaderE.uniforms.textureGridE.value=gridE;
-        vecShaderB.uniforms.textureGridB.value=gridB;
-
-    }
 
 
 
