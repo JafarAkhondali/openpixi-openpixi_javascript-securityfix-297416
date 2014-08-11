@@ -389,7 +389,8 @@ Shaders = {
                 "vec3 rotB = rotorNeg(uv);",
                 "vec3 j = texture2D(textureGridJ,uv).xyz;",
                 "vec3 E_old = texture2D(textureGridE,uv).xyz;",
-                "vec3 E_new = E_old + dt*(rotB);//-j);",
+                "float mu0 = 0.01;",
+                "vec3 E_new = E_old + dt*mu0*(rotB);//-j);", //fixme:
 
 
 
@@ -542,6 +543,7 @@ Shaders = {
 
             gridsize: {type: "f",value: gui.vars().gridsize},
             dt:{type:"f",value:gui.vars().dt},
+            pcount:{type:"f", value: gui.vars().Particles},
             texturePosition:{type: "t",value :null},
             textureVelocity:{type: "t",value :null}
 
@@ -550,7 +552,7 @@ Shaders = {
 
         vertexShader: [
 
-            "void main(){",
+            "void main(){ ",
             "gl_Position = vec4( position, 1.0 );",
             "}"
 
@@ -560,6 +562,7 @@ Shaders = {
 
         "uniform float gridsize;",
         "uniform float dt;",
+        "uniform float pcount;",
 
 
         "uniform sampler2D texturePosition;",
@@ -599,32 +602,36 @@ Shaders = {
 
 
         "void main(){",
+            "float maxIter = pcount;",
             "float LOWER_BOUNDS = -200.0;",
             "float UPPER_BOUNDS = 200.0;",
             "vec2 uv = gl_FragCoord.xy/resolution.xy;",
             "vec3 j = vec3(0.0,0.0,0.0);",
 
 
-            "for(int x = 0; x<100;x++){",
+            "for(int y = 0; y<100;y++){",
 
-                "for(int y = 0; y<100;y++){",
-
+                "for(int x = 0; x<100;x++){",
+                    "maxIter-=1.0;",
+                    "if(maxIter>=0.0){",
                     "vec2 look = vec2((float(x)+0.5)/100.0,(float(y)+0.5)/100.0);",
                     "vec3 position = texture2D(texturePosition,look).xyz;",
                     "vec3 velocity = texture2D(textureVelocity,look).xyz;",
                     "vec2 gp = getGridPoint(position);",
-                    "if(abs(gp.x-uv.x)<=0.001&&abs(gp.y-uv.y)<=0.001){",
+                    "if(abs(gp.x-uv.x)<=0.0001&&abs(gp.y-uv.y)<=0.0001){",
 
-                         "j+=velocity*0.001;",//scale it down a little
-                         //"j=vec3(0.0,0.01,0.02);",
+                         "j+=velocity;",//scale it down a little
+                         //"j=vec3(0.0,0.1,0.02);",
 
-                    "}",
+                    "}}",
+
+
 
                 "}",
 
             "}",
 
-
+           //"if(j.x>1.0||j.y>1.0||j.z>10.0){j=vec3(1.0,1.0,1.0);}",
            "gl_FragColor=vec4(j,1.0);",
 
 
@@ -637,7 +644,9 @@ Shaders = {
     getVectorEShader: function(){return new THREE.ShaderMaterial({
         uniforms:{
             gridsize:{type: "f", value: gui.vars().gridsize},
-            textureGridE:{type:"t", value:null}
+            textureGridE:{type:"t", value:null},
+            textureGridJ:{type:"t", value:null}
+
         },
 
         vertexShader : [
@@ -645,7 +654,6 @@ Shaders = {
 
         "uniform sampler2D textureGridE;",
         "uniform float gridsize;",
-
 
         "vec2 getUV(vec3 pos){",
 
@@ -802,6 +810,95 @@ Shaders = {
         ].join('\n')
 
 
+    })},
+
+    getVectorJShader: function(){return new THREE.ShaderMaterial({
+        uniforms:{
+            gridsize:{type: "f", value: gui.vars().gridsize},
+
+            textureGridJ:{type:"t", value:null}
+
+        },
+
+        vertexShader : [
+
+
+            "uniform float gridsize;",
+            "uniform sampler2D textureGridJ;",
+
+
+            "vec2 getUV(vec3 pos){",
+
+
+            "float maxval = 400.0;",
+
+            //map particles position  to [0,size]
+            "float x = ((pos.x+maxval/2.0)/maxval)*(gridsize);",
+            "float y = ((pos.y+maxval/2.0)/maxval)*(gridsize);",
+            "float z = ((pos.z+maxval/2.0)/maxval)*(gridsize);",
+
+            //now round to nearest fp
+            "float lx = floor(x);",
+            "float ly = floor(y);",
+            "float lz = floor(z);",
+
+
+            "float width = ceil(sqrt(gridsize));",
+
+
+            "float row = floor(lz/width);",
+            "float col = mod(lz,width);",
+
+
+            "float qu = col*(gridsize)+lx;",
+            "float qv = row*(gridsize)+ly;",
+
+
+
+            "qu = (qu+0.5)/(gridsize*width);",
+            "qv = (qv+0.5)/(gridsize*width);",
+
+
+            "return vec2(qu,qv);",
+
+
+            "}",
+
+            "void main() {",
+
+
+            "vec4 mvPosition;",
+
+            "mvPosition = modelViewMatrix * vec4( position, 1.0 );",
+
+
+            "if(position.y>200.0){",
+            "vec2 uv = getUV(vec3(position.x,position.y-1000.0,position.z));",
+            "vec3 j = texture2D(textureGridJ,uv).xyz;",
+            "vec3 pos = vec3(position.x,position.y-1000.0,position.z);",
+            "pos = pos +j*200.0;",//200 visibility factor
+            "mvPosition = modelViewMatrix * vec4(pos,1.0);",
+            "}",
+
+            "gl_Position = projectionMatrix * mvPosition;",
+
+
+            "}"
+
+        ].join('\n'),
+
+        fragmentShader : [
+            "vec3 vColor = vec3(0.0,1.0,1.0);",
+
+            "void main() {",
+
+            "gl_FragColor =  vec4( vColor, 1.0 );",
+
+            "}"
+        ].join('\n')
+
     })}
+
+
 
 }

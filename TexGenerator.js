@@ -20,9 +20,9 @@ function TexGenerator(renderer,ppscene,ppcamera,quad){
                 a[ k*4 + 2 ] = z;
                 a[ k*4 + 3 ] = 1;
             }else{
-                a[ k*4 + 0 ] = 3000; //see shader for j; needs to be out of range else some gridpoints always get called
-                a[ k*4 + 1 ] = 3000;
-                a[ k*4 + 2 ] = 3000;
+                a[ k*4 + 0 ] = 0;
+                a[ k*4 + 1 ] = 0;
+                a[ k*4 + 2 ] = 0;
                 a[ k*4 + 3 ] = 1;
             }
 
@@ -95,7 +95,7 @@ function TexGenerator(renderer,ppscene,ppcamera,quad){
 
         k=index;
         a[k*4+0]=0;
-        a[k*4+1]=1;
+        a[k*4+1]=0.1;
         a[k*4+2]=0;
         a[k*4+3]=1;
 

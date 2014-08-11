@@ -16,7 +16,7 @@ function Gui(){
         this.Ey = 0.0;
         this.Ez = 0.0;
 
-        this.m = 0.000;
+        this.m = 0.0;
         this.q = 0.0;
 
 
@@ -30,7 +30,7 @@ function Gui(){
 
 
 
-    gui.add(text, 'Particles',1,10000);
+    gui.add(text, 'Particles',1,10000).step(1);
     gui.add(text,'dt',0.0,10.0);
     gui.add(text,'gridsize',2,20).step(1);
     gui.add(text, 'gy',-0.9999,0.9999);

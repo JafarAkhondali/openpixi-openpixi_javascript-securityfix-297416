@@ -11,7 +11,7 @@ function Simulator(){
         //the texture processor
         processor,
         //shaders for the vector system
-        vecShaderE, vecShaderB;
+        vecShaderE, vecShaderB, vecShaderJ;
 
 
     this.init = function(){
@@ -113,11 +113,15 @@ function Simulator(){
 
         vecShaderB = Shaders.getVectorBShader();
         vecShaderE = Shaders.getVectorEShader();
+        vecShaderJ = Shaders.getVectorJShader();
 
         var step = BOUNDS/(gui.vars().gridsize);
 
         vecShaderB.uniforms.textureGridB.value=processor.getBTex();
         vecShaderE.uniforms.textureGridE.value=processor.getETex();
+        vecShaderJ.uniforms.textureGridJ.value=processor.getJTex();
+
+        var bool = true;
 
         for( var z = -BOUNDS/2; z<BOUNDS/2;z+=step){
 
@@ -125,6 +129,7 @@ function Simulator(){
 
                 for(var x = -BOUNDS/2; x<BOUNDS/2;x+=step){
 
+                    if(bool){
                     var vecgeometry = new THREE.Geometry();
                     vecgeometry.vertices.push(new THREE.Vector3(x+step/2,y+step/2,z+step/2));
                     vecgeometry.vertices.push(new THREE.Vector3(x+step/2,y+step/2+1000,z+step/2));
@@ -132,10 +137,16 @@ function Simulator(){
 
                     var lineE = new THREE.Line(vecgeometry,vecShaderE);
                     var lineB = new THREE.Line(vecgeometry,vecShaderB);
+                    var lineJ = new THREE.Line(vecgeometry, vecShaderJ);
 
                     scene.add(lineE);
                     scene.add(lineB);
+                    scene.add(lineJ);
 
+                    }
+                    if(gui.vars().gridsize>5){//only draw every second gridpoint
+                    bool = !bool;
+                    }
                 }
 
             }
@@ -183,6 +194,7 @@ function Simulator(){
 
         vecShaderB.uniforms.textureGridB.value = processor.getBTex();
         vecShaderE.uniforms.textureGridE.value = processor.getETex();
+        vecShaderJ.uniforms.textureGridJ.value = processor.getJTex();
 
         renderer.render(scene,camera);
 

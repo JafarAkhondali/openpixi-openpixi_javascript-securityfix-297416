@@ -153,7 +153,6 @@ function TexProcessor(renderer){
         gridEShader.uniforms.dt.value = dt;
         gridEShader.uniforms.textureGridE.value = pingpong? rtgridE1 : rtgridE2;
         gridEShader.uniforms.textureGridB.value = pingpong? rtgridB1 : rtgridB2;
-        gridEShader.uniforms.textureGridJ.value = rtgridJ;
 
 
         renderer.render(ppscene,ppcamera, pingpong? rtgridE2 : rtgridE1);
@@ -193,6 +192,10 @@ function TexProcessor(renderer){
 
     this.getPosTex = function(){
         return currentPosition;
+    }
+    this.getJTex = function(){
+
+        return rtgridJ;
     }
 
 
