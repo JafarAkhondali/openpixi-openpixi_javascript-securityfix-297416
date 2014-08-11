@@ -49,7 +49,7 @@ function Gui(){
 
 
 
-    var obj = {reset: function(){init()}};
+    var obj = {reset: function(){reset()}};
     gui.add(obj,'reset');
 
     var inf = {info: function(){
@@ -58,7 +58,7 @@ function Gui(){
     gui.add(inf,'info');
 
     var debug= {debug: function(){
-        dispTex = !dispTex;
+        sim.debugScene();
     }}
     gui.add(debug,'debug');
 

@@ -169,7 +169,7 @@ Shaders = {
     getAccelerationShader: function(){return new THREE.ShaderMaterial({
 
         uniforms: {
-            dt : { type: "f",value: DT},
+            dt : { type: "f",value: gui.vars().dt},
             gy: {type: "f", value: gui.vars().gy},
             gridsize: {type: "f", value:null},
             resolution: { type: "v2", value: new THREE.Vector2(PWIDTH,PWIDTH)},
@@ -602,7 +602,7 @@ Shaders = {
             "float LOWER_BOUNDS = -200.0;",
             "float UPPER_BOUNDS = 200.0;",
             "vec2 uv = gl_FragCoord.xy/resolution.xy;",
-            "vec3 j;",
+            "vec3 j = vec3(0.0,0.0,0.0);",
 
 
             "for(int x = 0; x<100;x++){",
@@ -615,8 +615,8 @@ Shaders = {
                     "vec2 gp = getGridPoint(position);",
                     "if(abs(gp.x-uv.x)<=0.001&&abs(gp.y-uv.y)<=0.001){",
 
-                         "j=velocity*0.001;",//scale it down a little
-                         //"j=vec3(0.0,0.01,0.0);",
+                         "j+=velocity*0.001;",//scale it down a little
+                         //"j=vec3(0.0,0.01,0.02);",
 
                     "}",
 

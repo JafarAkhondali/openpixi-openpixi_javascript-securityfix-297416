@@ -11,8 +11,8 @@
 <script type="text/javascript" src="TexGenerator.js"></script>
 <script type="text/javascript" src="Gui.js"></script>
 <script type="text/javascript" src="Shaders.js"></script>
-<script type="text/javascript" src="main.js"></script>
-<script type="text/javascript" src="simulator.js"></script>
+<script type="text/javascript" src="Simulator.js"></script>
+<script type="text/javascript" src="TexProcessor.js"></script>
 
 
 <head>
@@ -28,64 +28,29 @@
     //check if WebGL is supported
     if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
-
-    //texture debug
-    var cameraTex, sceneTex;
-    var dispTex = false;
-    sceneTex = new THREE.Scene();
-    cameraTex = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 10000 );
-
     //global variables
     var PWIDTH = 100; // sqrt(number of particles)
     var BOUNDS = 400; //Particle coordinates range from -bounds/2 to bounds/2
-    var DT = 1; //delta time
-    var FSIZE;
-    var B;
-    var E;
 
-    var FXY,FZ;
-
-    var container, camera, scene, renderer; //main scene
-
-    var particles, material, geometry; //the particle system
-
-    var uniforms; //uniforms for the particle system's shader
-
-    var simul; //the simulator updates the particles' positions
-
-
-    //three.js
-    container = document.createElement( 'div' );
+    var container = document.createElement( 'div' );
     document.body.appendChild( container );
-
-    renderer = new THREE.WebGLRenderer();
-    renderer.setSize( window.innerWidth, window.innerHeight );
-    container.appendChild( renderer.domElement );
-
-    camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 150000 );
-    camera.position.z = 400;
-
-    //controls
-    var controls = new THREE.OrbitControls( camera, renderer.domElement );
-
 
     //gui
     var gui = new Gui();
 
-    //stats
 
+    //stats
     var stats = new Stats();
     stats.domElement.style.position = 'absolute';
     stats.domElement.style.top = '0px';
     document.body.appendChild( stats.domElement );
 
-    //end stats
+    //simulator
+    var sim = new Simulator();
 
-
-
-    //start simulation
-
-    init();
+    function reset(){
+        sim.reset();
+    }
 
 
 

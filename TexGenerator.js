@@ -119,12 +119,12 @@ function TexGenerator(renderer,ppscene,ppcamera,quad){
 
         var a = new Float32Array(width*height*4);
 
-        var c = (2*Math.PI)/FSIZE;
+        var c = (2*Math.PI)/gui.vars().gridsize;
         var e0 = 0.05;
 
         for(var k=0;k<width*height;k++){
 
-            var x = k % FSIZE;
+            var x = k % gui.vars().gridsize;
 
             a[k*4+0] =0;
             a[k*4+1] =0;
@@ -152,12 +152,12 @@ function TexGenerator(renderer,ppscene,ppcamera,quad){
 
         var a = new Float32Array(width*height*4);
 
-        var c = (2*Math.PI)/FSIZE;
+        var c = (2*Math.PI)/gui.vars().gridsize;
         var e0 = 0.05;
 
         for(var k=0;k<width*height;k++){
 
-            var x = k % FSIZE;
+            var x = k % gui.vars().gridsize;
 
 
             a[k*4+0] = 0;
