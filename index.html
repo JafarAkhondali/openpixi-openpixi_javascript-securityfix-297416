@@ -3,10 +3,10 @@
 
 <script type = "text/javascript" src="threejs/build/three.min.js"></script>
 <script type = "text/javascript" src="scripts/OrbitControls.js"></script>
-<script type="text/javascript" src="scripts/Detector.js"></script>
+<script type = "text/javascript" src="scripts/Detector.js"></script>
 
 <script type = "text/javascript" src="scripts/stats.js/build/stats.min.js"></script>
-<script type="text/javascript" src="scripts/dat.gui.min.js"></script>
+<script type = "text/javascript" src="scripts/dat.gui.min.js"></script>
 
 <script type="text/javascript" src="TexGenerator.js"></script>
 <script type="text/javascript" src="Gui.js"></script>
@@ -26,23 +26,18 @@
 <script type="text/javascript">
 
     //todo:
-    //eigener J vector shader - done
-    //in J shader nicht alle 100x100 durchlaufen - done
     //debug j in E Shader -todo
-    //gui anpassen
-    //docu und comments schreiben
-    //nicht alle vectoren anzeigen
-    //gui werte zur richtigen zeit setzen
-    //fehler wenn gridsize==7 untersuchen
+    //gridsize == 7 issue
 
 
     //check if WebGL is supported
     if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
     //global variables
-    var PWIDTH = 100; // sqrt(number of particles)
+    var PWIDTH = 100; // sqrt(number of max particles)
     var BOUNDS = 400; //Particle coordinates range from -bounds/2 to bounds/2
 
+    //this is where we render to
     var container = document.createElement( 'div' );
     document.body.appendChild( container );
 

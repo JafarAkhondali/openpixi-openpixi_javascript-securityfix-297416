@@ -1,3 +1,5 @@
+//processes textures i.e. calculates new values, sets color of texture accordingl
+
 function TexProcessor(renderer){
 
         //scene for ping ponc rendering
@@ -46,6 +48,7 @@ function TexProcessor(renderer){
     }
     this.init();
 
+    //initializes shaders
     function initShaders(){
 
         passThruShader = Shaders.getPassThruShader();
@@ -69,40 +72,87 @@ function TexProcessor(renderer){
 
     }
 
-    function initTextures(){
 
+    //initializes textures according to values set in gui
+    function initTextures(){
         //particle textures
 
-        rtPosition1 = texGen.randomPos(PWIDTH,PWIDTH);
-        rtPosition2 = texGen.const(PWIDTH,PWIDTH,new THREE.Vector4(0,0,0,1));
+        switch(gui.vars().particleMode){
+
+            case 'all':
+                rtPosition1 = texGen.randomPos(PWIDTH,PWIDTH);
+                rtPosition2 = texGen.const(PWIDTH,PWIDTH,new THREE.Vector4(0,0,0,1));
+                break;
+
+            case 'halfX':
+
+                rtPosition1 = texGen.halfPos(PWIDTH,PWIDTH, new THREE.Vector3(1,0,0));
+                rtPosition2 = texGen.const(PWIDTH,PWIDTH,new THREE.Vector4(0,0,0,1));
+                break
+            case 'halfY':
+
+                rtPosition1 = texGen.halfPos(PWIDTH,PWIDTH, new THREE.Vector3(0,1,0));
+                rtPosition2 = texGen.const(PWIDTH,PWIDTH,new THREE.Vector4(0,0,0,1));
+                break
+
+            case 'halfZ':
+
+                rtPosition1 = texGen.halfPos(PWIDTH,PWIDTH, new THREE.Vector3(0,0,1));
+                rtPosition2 = texGen.const(PWIDTH,PWIDTH,new THREE.Vector4(0,0,0,1));
+                break
+
+
+        }
+
         rtVelocity1 = texGen.const(PWIDTH,PWIDTH,new THREE.Vector4(0,0,0,1));
         rtVelocity2 = texGen.const(PWIDTH,PWIDTH,new THREE.Vector4(0,0,0,1));
         rtAcceleration1 = texGen.const(PWIDTH,PWIDTH,new THREE.Vector4(0,0,0,1));
         rtAcceleration2 = texGen.const(PWIDTH,PWIDTH,new THREE.Vector4(0,0,0,1));
-        rtMassCharge = texGen.const(PWIDTH,PWIDTH,new THREE.Vector3(1,1.2,1,1));
+
+
+        rtMassCharge = texGen.const(PWIDTH,PWIDTH,new THREE.Vector4(gui.vars().m,gui.vars().q,0,1));
 
         //grid textures
         var gridtexwidth = Math.ceil(Math.sqrt(gui.vars().gridsize))*gui.vars().gridsize;
 
-        rtgridE1 = texGen.const(gridtexwidth,gridtexwidth,new THREE.Vector4(gui.vars().Ex,gui.vars().Ey,gui.vars().Ez, 1));
-        rtgridE2 = texGen.const(gridtexwidth,gridtexwidth,new THREE.Vector4(gui.vars().Ex,gui.vars().Ey,gui.vars().Ez, 1));
-        //rtgridE1 = texGen.single(gridtexwidth,gridtexwidth,42);
-        //rtgridE2 = texGen.single(gridtexwidth,gridtexwidth,42);
-        //rtgridE1 = texGen.sinE(gridtexwidth,gridtexwidth);
-        //rtgridE2 = texGen.sinE(gridtexwidth,gridtexwidth);
+        console.log(gui.vars().gridMode);
 
-        rtgridB1 = texGen.const(gridtexwidth,gridtexwidth,new THREE.Vector4(gui.vars().Bx,gui.vars().By,gui.vars().Bz, 1));
-        rtgridB2 = texGen.const(gridtexwidth,gridtexwidth,new THREE.Vector4(gui.vars().Bx,gui.vars().By,gui.vars().Bz, 1));
-        //rtgridB1 = texGen.cosB(gridtexwidth,gridtexwidth);
-        //rtgridB2 = texGen.cosB(gridtexwidth,gridtexwidth);
+        switch(gui.vars().gridMode){
 
+            case 'all':
+                rtgridE1 = texGen.const(gridtexwidth,gridtexwidth,new THREE.Vector4(gui.vars().Ex,gui.vars().Ey,gui.vars().Ez, 1));
+                rtgridE2 = texGen.const(gridtexwidth,gridtexwidth,new THREE.Vector4(gui.vars().Ex,gui.vars().Ey,gui.vars().Ez, 1));
+
+                rtgridB1 = texGen.const(gridtexwidth,gridtexwidth,new THREE.Vector4(gui.vars().Bx,gui.vars().By,gui.vars().Bz, 1));
+                rtgridB2 = texGen.const(gridtexwidth,gridtexwidth,new THREE.Vector4(gui.vars().Bx,gui.vars().By,gui.vars().Bz, 1));
+                break;
+            case 'single':
+                rtgridE1 = texGen.single(gridtexwidth,gridtexwidth,gui.vars().gridSingleIndex);
+                rtgridE2 = texGen.single(gridtexwidth,gridtexwidth,gui.vars().gridSingleIndex);
+
+                rtgridB1 = texGen.const(gridtexwidth,gridtexwidth,new THREE.Vector4(gui.vars().Bx,gui.vars().By,gui.vars().Bz, 1));
+                rtgridB2 = texGen.const(gridtexwidth,gridtexwidth,new THREE.Vector4(gui.vars().Bx,gui.vars().By,gui.vars().Bz, 1));
+                break;
+            case 'SinCos':
+
+                rtgridE1 = texGen.sinE(gridtexwidth,gridtexwidth);
+                rtgridE2 = texGen.sinE(gridtexwidth,gridtexwidth);
+
+                rtgridB1 = texGen.cosB(gridtexwidth,gridtexwidth);
+                rtgridB2 = texGen.cosB(gridtexwidth,gridtexwidth);
+                break;
+
+
+        }
 
         rtgridJ = texGen.const(gridtexwidth,gridtexwidth,new THREE.Vector4(0,0,0,1));
 
         //fixme debug
+        //which texture to display in debug mode
         debugTex(rtgridJ);
     }
 
+    //calculation step
     this.simulate = function(){
 
         var dt = gui.vars().dt;
@@ -167,10 +217,6 @@ function TexProcessor(renderer){
         renderer.render(ppscene,ppcamera,pingpong? rtgridB2 : rtgridB1);
 
 
-
-
-
-
         //set variables
         currentPosition = pingpong? rtPosition1:rtPosition2;
         currentE = pingpong? rtgridE1:rtgridE2;
@@ -181,7 +227,7 @@ function TexProcessor(renderer){
 
     }
 
-
+    //getters
     this.getETex = function(){
         return currentE;
     }
@@ -199,7 +245,7 @@ function TexProcessor(renderer){
     }
 
 
-
+    //renders the texture debug scene to the screen
     this.renderDebugTex = function(){
 
         renderer.render(debugScene,debugCamera);
@@ -207,7 +253,7 @@ function TexProcessor(renderer){
     }
 
 
-
+    //sets up texture debug scene
     function debugTex(textureToDisplay){
         var geometry = new THREE.PlaneGeometry(textureToDisplay.width,textureToDisplay.height);
 

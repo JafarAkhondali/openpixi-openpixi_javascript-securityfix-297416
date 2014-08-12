@@ -1,3 +1,5 @@
+//creates and renders the scene to be displayed
+
 function Simulator(){
 
         //threejs
@@ -32,7 +34,9 @@ function Simulator(){
     this.init();
 
 
+    //initializes renderer and camera
     function initThreejs(){
+
 
         renderer = new THREE.WebGLRenderer();
         renderer.setSize( window.innerWidth, window.innerHeight );
@@ -56,6 +60,7 @@ function Simulator(){
 
     }
 
+    //initializes scene and scene objects
     function initScene(){
 
         scene = new THREE.Scene();
@@ -70,20 +75,19 @@ function Simulator(){
 
      }
 
-
+    //initializes the particle system
     function initParticleSystem(){
 
-        //the texture from which the particles' position is read
 
 
         //assigning the shaders
         var material = Shaders.getParticleShader();
 
-        //vertices at random position represent the particles
+        //vertices represent the particles
         var geometry = new THREE.Geometry();
 
 
-        //initial position next to each other
+        //initial position next to each other to ensure unique texture lookup
         var y=0;
         var x=0;
         for(var p = 0; p<gui.vars().Particles;p++){
@@ -108,7 +112,7 @@ function Simulator(){
         return new THREE.ParticleSystem( geometry,material);
 
 }
-
+    //the vectors to be shown at every grid intersection point
     function initVectorSystem(){
 
         vecShaderB = Shaders.getVectorBShader();
@@ -156,6 +160,7 @@ function Simulator(){
 
     }
 
+    //skybox - the background of our scene
     function addSkybox(scene){
 
         var skyBoxGeometry = new THREE.BoxGeometry( 15000, 15000, 15000 );
@@ -164,6 +169,8 @@ function Simulator(){
         scene.add(skyBox);
     }
 
+
+    //adds a grid that serve as boundaries, cell width is dependent on grid size
     function addGrid(scene){
         var step = BOUNDS/gui.vars().gridsize;
         var gridXZ = new THREE.GridHelper(BOUNDS/2, step/2);
@@ -184,37 +191,47 @@ function Simulator(){
         scene.add(gridYZ);
     }
 
+    //the simulation loop
     function simulate(){
 
+        //the simulation stops this way if another window/tab is open
         requestAnimationFrame(simulate);
 
+        //execute one calculation step
         processor.simulate();
 
+
+        //update textures for looking up particle position and vector direction
         particleSystem.material.uniforms.lookup.value = processor.getPosTex();
 
         vecShaderB.uniforms.textureGridB.value = processor.getBTex();
         vecShaderE.uniforms.textureGridE.value = processor.getETex();
         vecShaderJ.uniforms.textureGridJ.value = processor.getJTex();
 
+        //render scene
         renderer.render(scene,camera);
 
+        //debug mode
         if(dispTex){
             processor.renderDebugTex();
         }
 
+        //update stats
         stats.update();
     }
 
 
+    //initialize with new values, start simulation
     this.reset = function(){
 
         processor = new TexProcessor(renderer);
         initScene();
     }
 
-        this.debugScene = function(){
+    //see gui
+    this.debugScene = function(){
             dispTex = !dispTex;
-        }
+    }
 
 
 }

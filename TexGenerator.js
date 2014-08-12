@@ -1,7 +1,10 @@
+
+
 function TexGenerator(renderer,ppscene,ppcamera,quad){
 
     var passThruShader = Shaders.getPassThruShader();
 
+    //returns texture with values between -bounds/2 and bounds/2
     this.randomPos = function(width,height){
 
         var x, y, z;
@@ -41,6 +44,49 @@ function TexGenerator(renderer,ppscene,ppcamera,quad){
 
     }
 
+    //returns texture with values between -bounds/2 and bounds/2
+    //when the dir vector's value is 1, the values will be set between 0 and bounds/2 in that direction
+    this.halfPos = function(width,height,dir){
+
+        var x, y, z;
+
+        var a = new Float32Array(width*height * 4);
+
+        for (var k = 0; k < width*height; k++) {
+
+            x = (dir.x==1)? (Math.random() * BOUNDS/2) :(Math.random() * BOUNDS - BOUNDS/2);
+            y = (dir.y==1)? (Math.random() * BOUNDS/2) :(Math.random() * BOUNDS - BOUNDS/2);
+            z = (dir.z==1)? (Math.random() * BOUNDS/2) :(Math.random() * BOUNDS - BOUNDS/2);
+
+            if(k<gui.vars().Particles){
+                a[ k*4 + 0 ] = x;
+                a[ k*4 + 1 ] = y;
+                a[ k*4 + 2 ] = z;
+                a[ k*4 + 3 ] = 1;
+            }else{
+                a[ k*4 + 0 ] = 0;
+                a[ k*4 + 1 ] = 0;
+                a[ k*4 + 2 ] = 0;
+                a[ k*4 + 3 ] = 1;
+            }
+
+        }
+
+        var texture = new THREE.DataTexture( a, width, height, THREE.RGBAFormat, THREE.FloatType );
+        texture.minFilter = THREE.NearestFilter;
+        texture.magFilter = THREE.NearestFilter;
+        texture.needsUpdate = true;
+        texture.flipY = false;
+
+        var rendertexture = getRenderTarget(width,height);
+        renderTexture(width,height,texture,rendertexture);
+
+        return rendertexture;
+
+    }
+
+
+    //returns texture where each texel has the vector's value
     this.const = function(width,height,vector){
 
         var x, y, z, w;
@@ -77,7 +123,7 @@ function TexGenerator(renderer,ppscene,ppcamera,quad){
 
     }
 
-
+    //returns a texture where only the texel at a certain index will have a value other than [0, 0, 0]
     this.single = function(width,height,index){
 
 
@@ -114,7 +160,7 @@ function TexGenerator(renderer,ppscene,ppcamera,quad){
 
     }
 
-
+    //returns a texture where the values in z direction form a cosine wave
     this.cosB = function(width,height){
 
         var a = new Float32Array(width*height*4);
@@ -148,6 +194,7 @@ function TexGenerator(renderer,ppscene,ppcamera,quad){
 
     }
 
+    //returns a texture where the values in y direction form a sine wave
     this.sinE  = function(width,height){
 
         var a = new Float32Array(width*height*4);
@@ -183,7 +230,7 @@ function TexGenerator(renderer,ppscene,ppcamera,quad){
     }
 
 
-    //renders datatexture to fbo
+    //renders datatexture to frame buffer object
     function renderTexture( width,height,input,output ) {
 
         quad.material = passThruShader;
@@ -195,7 +242,7 @@ function TexGenerator(renderer,ppscene,ppcamera,quad){
 
     }
 
-    //returns FBO
+    //returns frame buffer object
     function getRenderTarget(width, height){
 
         var renderTarget = new THREE.WebGLRenderTarget(width, height, {

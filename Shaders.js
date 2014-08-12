@@ -1,5 +1,8 @@
 Shaders = {
 
+
+    //sets the vertices of the particle system (=each particle) to a new position according to value in position texture
+    //lookup value is the vertex' initial position
     getParticleShader : function(){ return new THREE.ShaderMaterial({
         uniforms:{
 
@@ -31,6 +34,7 @@ Shaders = {
         ].join("\n")
     })},
 
+    //as the name suggests, this shader lets vertices and fragments pass through unchanged
     getPassThruShader: function(){return new THREE.ShaderMaterial({
         uniforms:{
             resolution: { type: "v2", value: null },
@@ -69,6 +73,8 @@ Shaders = {
 
     })},
 
+    //calculates new position of each paticle
+    //lookup value is the particle's initial position
     getPositionShader: function(){return new THREE.ShaderMaterial({
         uniforms:{
             resolution: { type: "v2", value: new THREE.Vector2(PWIDTH,PWIDTH)},
@@ -123,6 +129,7 @@ Shaders = {
 
     })},
 
+    //calculates new velocity of each paticle
     getVelocityShader: function(){return new THREE.ShaderMaterial({
 
         uniforms:{
@@ -166,6 +173,7 @@ Shaders = {
 
     })},
 
+    //calculates new acceleration of each paticle
     getAccelerationShader: function(){return new THREE.ShaderMaterial({
 
         uniforms: {
@@ -205,7 +213,8 @@ Shaders = {
 
             "const float drag = 0.0005;",
 
-
+            //returns the lookup vector for grid texture by
+            //calculating nearest grd point to the particles position pos
             "vec2 getGridPoint(vec3 pos){",
 
                 "float maxval = 400.0;",
@@ -252,7 +261,7 @@ Shaders = {
                 "float m = texture2D(textureMQ,uv).x;",
 
                 "vec3 v = texture2D(textureVelocity,uv).xyz;",
-                "vec3 acceleration =  -drag * v + m*gy + (q/m*(E+cross(v,B)));",
+                "vec3 acceleration =  -drag * v + m*vec3(0.0,gy,0.0) + (q/m*(E+cross(v,B)));",
 
                 "gl_FragColor=vec4(acceleration,1.0);",
 
@@ -265,6 +274,7 @@ Shaders = {
 
     })},
 
+    //calculates new electric field at every grid point
     getGridEShader: function(){return new THREE.ShaderMaterial({
         uniforms:{
             dt : { type: "f",value: null},
@@ -390,7 +400,7 @@ Shaders = {
                 "vec3 j = texture2D(textureGridJ,uv).xyz;",
                 "vec3 E_old = texture2D(textureGridE,uv).xyz;",
                 "float mu0 = 0.01;",
-                "vec3 E_new = E_old + dt*mu0*(rotB);//-j);", //fixme:
+                "vec3 E_new = E_old + dt*mu0*(rotB);//-j);", //fixme: j
 
 
 
@@ -403,7 +413,7 @@ Shaders = {
         ].join("\n")
 
     })},
-
+    //calculates new magnetic field at every gridpoint
     getGridBShader: function(){return new THREE.ShaderMaterial({
         uniforms:{
             dt : { type: "f",value: null},
@@ -536,7 +546,7 @@ Shaders = {
         ].join("\n")
 
     })},
-
+    //calculates current density at every grid point
     getGridJShader: function(){return new THREE.ShaderMaterial({
 
         uniforms:{
@@ -620,7 +630,7 @@ Shaders = {
                     "vec2 gp = getGridPoint(position);",
                     "if(abs(gp.x-uv.x)<=0.0001&&abs(gp.y-uv.y)<=0.0001){",
 
-                         "j+=velocity;",//scale it down a little
+                         "j+=velocity*0.001;",//scale it down a little
                          //"j=vec3(0.0,0.1,0.02);",
 
                     "}}",
@@ -641,6 +651,7 @@ Shaders = {
 
     })},
 
+    //the following shaders calculate the new positions of the endpoints of every vector
     getVectorEShader: function(){return new THREE.ShaderMaterial({
         uniforms:{
             gridsize:{type: "f", value: gui.vars().gridsize},
@@ -815,7 +826,6 @@ Shaders = {
     getVectorJShader: function(){return new THREE.ShaderMaterial({
         uniforms:{
             gridsize:{type: "f", value: gui.vars().gridsize},
-
             textureGridJ:{type:"t", value:null}
 
         },
