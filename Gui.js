@@ -11,6 +11,7 @@ function Gui(){
         this.dt = 0.01;
         this.drag = 0.0005;
         this.gridsize =5;
+        this.vectorscale = 200;
 
         this.Bx = 0.0;
         this.By = 0.0;
@@ -20,9 +21,11 @@ function Gui(){
         this.Ey = 0.0;
         this.Ez = 0.0;
         this.mu0 = 0.01;
+        this.eps0 = 1/this.mu0;
 
         this.m = 1.0;
         this.q = 1.0;
+        this.jscale = 0.001;
 
         this.particleMode = 'all';
         this.gridMode = 'all';
@@ -39,7 +42,7 @@ function Gui(){
         alert('left-click to move camera, \nhold mousewheel to zoom,\n click reset to apply changes')}};
 
     gui.add(inf,'info');
-    gui.add(text,'dt',0.0,10.0);
+    gui.add(text,'dt',0.0,1.0);
 
     gui.add(text, 'particleMode', ['all', 'halfX','halfY','halfZ' ]);
     gui.add(text, 'Particles',1,10000).step(1);
@@ -48,9 +51,11 @@ function Gui(){
     gui.add(text,'drag');
     gui.add(text,'m');
     gui.add(text,'q');
+    gui.add(text,'jscale');
 
     gui.add(text, 'gridMode', ['all', 'single', 'wave','halfE' ]);
-    gui.add(text,'gridsize',2,15).step(1);
+    gui.add(text,'gridsize',2,16).step(1);
+    gui.add(text,'vectorscale');
     gui.add(text, 'gridSingleIndex').min(0);
 
     var f1 = gui.addFolder('B');
@@ -64,6 +69,7 @@ function Gui(){
     f2.add(text,'Ey');
     f2.add(text,'Ez');
     f2.add(text,'mu0');
+    f2.add(text,'eps0');
 
 
 

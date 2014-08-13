@@ -300,6 +300,7 @@ Shaders = {
             dt : { type: "f",value: null},
             gridsize: {type: "f",value: gui.vars().gridsize},
             mu0 : {type: "f", value: gui.vars().mu0},
+            eps0: {type: "f", value: gui.vars().eps0},
             textureGridE:{type: "t",value :null},
             textureGridB:{type: "t",value :null},
             textureGridJ:{type:"t",value: null}
@@ -322,6 +323,7 @@ Shaders = {
             "uniform float dt;",
             "uniform float gridsize;",
             "uniform float mu0;",
+            "uniform float eps0;",
 
 
 
@@ -419,9 +421,9 @@ Shaders = {
 
 
                 "vec3 rotB = rotorNeg(uv);",
-                "vec3 j = texture2D(textureGridJ,uv).xyz;",
+                "vec3 j =  texture2D(textureGridJ,uv).xyz;",
                 "vec3 E_old = texture2D(textureGridE,uv).xyz;",
-                "vec3 E_new = E_old + dt*mu0*(rotB-j);", //fixme: j
+                "vec3 E_new = E_old + dt*(rotB-mu0*j)/eps0;",
 
 
 
@@ -574,6 +576,7 @@ Shaders = {
 
             gridsize: {type: "f",value: gui.vars().gridsize},
             dt:{type:"f",value:gui.vars().dt},
+            jscale:{type:"f",value:gui.vars().jscale},
             pcount:{type:"f", value: gui.vars().Particles},
             texturePosition:{type: "t",value :null},
             textureVelocity:{type: "t",value :null}
@@ -594,6 +597,7 @@ Shaders = {
         "uniform float gridsize;",
         "uniform float dt;",
         "uniform float pcount;",
+        "uniform float jscale;",
 
 
         "uniform sampler2D texturePosition;",
@@ -651,7 +655,7 @@ Shaders = {
                     "vec2 gp = getGridPoint(position);",
                     "if(abs(gp.x-uv.x)<=0.0001&&abs(gp.y-uv.y)<=0.0001){",
 
-                         "j+=velocity*0.001;",//scale it down a little
+                         "j+=velocity*jscale;",//scale it down a little
                          //"j=vec3(0.0,0.1,0.02);",
 
                     "}}",
@@ -676,6 +680,7 @@ Shaders = {
     getVectorEShader: function(){return new THREE.ShaderMaterial({
         uniforms:{
             gridsize:{type: "f", value: gui.vars().gridsize},
+            vectorscale:{type: "f", value: gui.vars().vectorscale},
             textureGridE:{type:"t", value:null},
             textureGridJ:{type:"t", value:null}
 
@@ -686,6 +691,7 @@ Shaders = {
 
         "uniform sampler2D textureGridE;",
         "uniform float gridsize;",
+        "uniform float vectorscale;",
 
         "vec2 getUV(vec3 pos){",
 
@@ -736,7 +742,7 @@ Shaders = {
                 "vec2 uv = getUV(vec3(position.x,position.y-1000.0,position.z));",
                 "vec3 E = texture2D(textureGridE,uv).xyz;",
                 "vec3 pos = vec3(position.x,position.y-1000.0,position.z);",
-                "pos = pos +E*200.0;",//200 visibility factor
+                "pos = pos +E*vectorscale;",
                 "mvPosition = modelViewMatrix * vec4(pos,1.0);",
             "}",
 
@@ -762,12 +768,14 @@ Shaders = {
     getVectorBShader: function(){return new THREE.ShaderMaterial({
         uniforms:{
             gridsize:{type: "f", value: gui.vars().gridsize},
+            vectorscale:{type: "f", value: gui.vars().vectorscale},
             textureGridB:{type:"t", value:null}
         },
 
         vertexShader : [
             "uniform sampler2D textureGridB;",
             "uniform float gridsize;",
+            "uniform float vectorscale;",
 
 
             "vec2 getUV(vec3 pos){",
@@ -819,7 +827,7 @@ Shaders = {
             "vec2 uv = getUV(vec3(position.x,position.y-1000.0,position.z));",
             "vec3 B = texture2D(textureGridB,uv).xyz;",
             "vec3 pos = vec3(position.x,position.y-1000.0,position.z);",
-            "pos = pos +B*200.0;//200 is visibility factor",
+            "pos = pos +B*vectorscale;",
             "mvPosition = modelViewMatrix * vec4(pos,1.0);",
             "}",
 
@@ -847,6 +855,7 @@ Shaders = {
     getVectorJShader: function(){return new THREE.ShaderMaterial({
         uniforms:{
             gridsize:{type: "f", value: gui.vars().gridsize},
+            vectorscale:{type: "f", value: gui.vars().vectorscale},
             textureGridJ:{type:"t", value:null}
 
         },
@@ -855,6 +864,7 @@ Shaders = {
 
 
             "uniform float gridsize;",
+            "uniform float vectorscale;",
             "uniform sampler2D textureGridJ;",
 
 
@@ -907,7 +917,7 @@ Shaders = {
             "vec2 uv = getUV(vec3(position.x,position.y-1000.0,position.z));",
             "vec3 j = texture2D(textureGridJ,uv).xyz;",
             "vec3 pos = vec3(position.x,position.y-1000.0,position.z);",
-            "pos = pos +j*200.0;",//200 visibility factor
+            "pos = pos +j*vectorscale;",
             "mvPosition = modelViewMatrix * vec4(pos,1.0);",
             "}",
 

@@ -149,7 +149,7 @@ function TexProcessor(renderer){
                 rtgridB2 = texGen.const(gridtexwidth,gridtexwidth,new THREE.Vector4(gui.vars().Bx,gui.vars().By,gui.vars().Bz, 1));
                 break;
 
-                break;
+
 
 
         }
@@ -203,6 +203,7 @@ function TexProcessor(renderer){
         //J force
         quad.material = gridJShader;
         gridJShader.uniforms.dt.value = dt;
+        gridJShader.uniforms.jscale.value = gui.vars().jscale;
         gridJShader.uniforms.texturePosition.value = pingpong? rtPosition1 : rtPosition2;
         gridJShader.uniforms.textureVelocity.value = pingpong? rtVelocity1 : rtVelocity2;
 
@@ -212,8 +213,10 @@ function TexProcessor(renderer){
         quad.material = gridEShader;
         gridEShader.uniforms.dt.value = dt;
         gridEShader.uniforms.mu0.value = gui.vars().mu0;
+        gridEShader.uniforms.eps0.value = gui.vars().eps0;
         gridEShader.uniforms.textureGridE.value = pingpong? rtgridE1 : rtgridE2;
         gridEShader.uniforms.textureGridB.value = pingpong? rtgridB1 : rtgridB2;
+        gridEShader.uniforms.textureGridJ.value = rtgridJ;
 
 
 

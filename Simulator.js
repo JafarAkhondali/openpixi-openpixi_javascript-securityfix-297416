@@ -205,8 +205,14 @@ function Simulator(){
         particleSystem.material.uniforms.lookup.value = processor.getPosTex();
 
         vecShaderB.uniforms.textureGridB.value = processor.getBTex();
+        vecShaderB.uniforms.vectorscale.value = gui.vars().vectorscale;
+
         vecShaderE.uniforms.textureGridE.value = processor.getETex();
+        vecShaderE.uniforms.vectorscale.value = gui.vars().vectorscale;
+
         vecShaderJ.uniforms.textureGridJ.value = processor.getJTex();
+        vecShaderJ.uniforms.vectorscale.value = gui.vars().vectorscale;
+
 
         //render scene
         renderer.render(scene,camera);
