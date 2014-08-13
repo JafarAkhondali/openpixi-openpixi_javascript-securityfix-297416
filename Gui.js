@@ -9,6 +9,7 @@ function Gui(){
         this.gy = 0;
         this.Particles = 1;
         this.dt = 0.01;
+        this.drag = 0.0005;
         this.gridsize =5;
 
         this.Bx = 0.0;
@@ -18,9 +19,10 @@ function Gui(){
         this.Ex = 0.0;
         this.Ey = 0.0;
         this.Ez = 0.0;
+        this.mu0 = 0.01;
 
-        this.m = 0.0;
-        this.q = 0.0;
+        this.m = 1.0;
+        this.q = 1.0;
 
         this.particleMode = 'all';
         this.gridMode = 'all';
@@ -43,10 +45,11 @@ function Gui(){
     gui.add(text, 'Particles',1,10000).step(1);
 
     gui.add(text,'gy');
+    gui.add(text,'drag');
     gui.add(text,'m');
     gui.add(text,'q');
 
-    gui.add(text, 'gridMode', ['all', 'single', 'wave' ]);
+    gui.add(text, 'gridMode', ['all', 'single', 'wave','halfE' ]);
     gui.add(text,'gridsize',2,15).step(1);
     gui.add(text, 'gridSingleIndex').min(0);
 
@@ -60,6 +63,7 @@ function Gui(){
     f2.add(text,'Ex');
     f2.add(text,'Ey');
     f2.add(text,'Ez');
+    f2.add(text,'mu0');
 
 
 

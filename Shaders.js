@@ -1,3 +1,22 @@
+//contains the shader code and returns new shader materials
+//the shader code can also be included in index.html in the following way which might be easier to work with:
+//
+//<script id = "someFragmentShader" type="x-shader/x-fragment">
+// void main(){
+//      ...
+// }
+//</script>
+//change the type to x-shader/x-vertex for vertex shaders
+//
+//the shader material then accesses the code like this:
+//new THREE.ShaderMaterial({
+//uniforms:{
+//    ...
+//},
+//
+//vertexShader: document.getElementById('someVertexShader').textContent,
+//fragmentShader: document.getElementById('someFragmentShader').textContent};
+
 Shaders = {
 
 
@@ -179,6 +198,7 @@ Shaders = {
         uniforms: {
             dt : { type: "f",value: gui.vars().dt},
             gy: {type: "f", value: gui.vars().gy},
+            drag: {type: "f", value: gui.vars().drag},
             gridsize: {type: "f", value:null},
             resolution: { type: "v2", value: new THREE.Vector2(PWIDTH,PWIDTH)},
             textureVelocity: { type: "t", value: null},
@@ -202,6 +222,7 @@ Shaders = {
         fragmentShader: [
             "uniform float dt;",
             "uniform float gy;",
+            "uniform float drag;",
             "uniform vec2 resolution;",
             "uniform sampler2D textureVelocity;",
             "uniform sampler2D textureMQ;",
@@ -211,7 +232,6 @@ Shaders = {
             "uniform sampler2D textureGridE;",
             "uniform sampler2D texturePosition;",
 
-            "const float drag = 0.0005;",
 
             //returns the lookup vector for grid texture by
             //calculating nearest grd point to the particles position pos
@@ -279,6 +299,7 @@ Shaders = {
         uniforms:{
             dt : { type: "f",value: null},
             gridsize: {type: "f",value: gui.vars().gridsize},
+            mu0 : {type: "f", value: gui.vars().mu0},
             textureGridE:{type: "t",value :null},
             textureGridB:{type: "t",value :null},
             textureGridJ:{type:"t",value: null}
@@ -300,6 +321,7 @@ Shaders = {
             "uniform sampler2D textureGridJ;",
             "uniform float dt;",
             "uniform float gridsize;",
+            "uniform float mu0;",
 
 
 
@@ -399,8 +421,7 @@ Shaders = {
                 "vec3 rotB = rotorNeg(uv);",
                 "vec3 j = texture2D(textureGridJ,uv).xyz;",
                 "vec3 E_old = texture2D(textureGridE,uv).xyz;",
-                "float mu0 = 0.01;",
-                "vec3 E_new = E_old + dt*mu0*(rotB);//-j);", //fixme: j
+                "vec3 E_new = E_old + dt*mu0*(rotB-j);", //fixme: j
 
 
 
@@ -548,7 +569,7 @@ Shaders = {
     })},
     //calculates current density at every grid point
     getGridJShader: function(){return new THREE.ShaderMaterial({
-
+    //fixme: replace the for loops with something better
         uniforms:{
 
             gridsize: {type: "f",value: gui.vars().gridsize},

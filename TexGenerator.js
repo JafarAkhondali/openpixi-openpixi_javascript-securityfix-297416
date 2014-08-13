@@ -229,6 +229,49 @@ function TexGenerator(renderer,ppscene,ppcamera,quad){
 
     }
 
+    this.halfGrid = function(width,height,vector){
+
+        var gridsize = gui.vars().gridsize;
+        var w = Math.ceil(Math.sqrt(gridsize));
+        var half = Math.floor(gridsize/2);
+
+
+
+        var a = new Float32Array(width*height*4);
+
+        var y = -1;
+        var x = 0;
+        for(var k=0;k<width*height;k++){
+
+            if(k%(w*gridsize)==0){
+                y+=1;
+                x=0;
+            }
+
+            if(x<half*gridsize&&y<gridsize){
+            a[k*4+0] = vector.x
+            a[k*4+1] = vector.y;
+            a[k*4+2] = vector.z;
+            a[k*4+3] = vector.w;
+            }
+
+            x+=1;
+        }
+
+
+        var texture = new THREE.DataTexture( a, width, height, THREE.RGBAFormat, THREE.FloatType );
+        texture.minFilter = THREE.NearestFilter;
+        texture.magFilter = THREE.NearestFilter;
+        texture.needsUpdate = true;
+        texture.flipY = false;
+
+        var rendertexture = getRenderTarget(width,height);
+        renderTexture(width,height,texture,rendertexture);
+
+        return rendertexture;
+
+    }
+
 
     //renders datatexture to frame buffer object
     function renderTexture( width,height,input,output ) {

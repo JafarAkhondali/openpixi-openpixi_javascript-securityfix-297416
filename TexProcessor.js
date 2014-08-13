@@ -115,7 +115,6 @@ function TexProcessor(renderer){
         //grid textures
         var gridtexwidth = Math.ceil(Math.sqrt(gui.vars().gridsize))*gui.vars().gridsize;
 
-        console.log(gui.vars().gridMode);
 
         switch(gui.vars().gridMode){
 
@@ -133,13 +132,23 @@ function TexProcessor(renderer){
                 rtgridB1 = texGen.const(gridtexwidth,gridtexwidth,new THREE.Vector4(gui.vars().Bx,gui.vars().By,gui.vars().Bz, 1));
                 rtgridB2 = texGen.const(gridtexwidth,gridtexwidth,new THREE.Vector4(gui.vars().Bx,gui.vars().By,gui.vars().Bz, 1));
                 break;
-            case 'SinCos':
+            case 'wave':
 
                 rtgridE1 = texGen.sinE(gridtexwidth,gridtexwidth);
                 rtgridE2 = texGen.sinE(gridtexwidth,gridtexwidth);
 
                 rtgridB1 = texGen.cosB(gridtexwidth,gridtexwidth);
                 rtgridB2 = texGen.cosB(gridtexwidth,gridtexwidth);
+                break;
+            case 'halfE':
+
+                rtgridE1 = texGen.halfGrid(gridtexwidth,gridtexwidth,new THREE.Vector4(gui.vars().Ex,gui.vars().Ey,gui.vars().Ez, 1));
+                rtgridE2 = texGen.halfGrid(gridtexwidth,gridtexwidth,new THREE.Vector4(gui.vars().Ex,gui.vars().Ey,gui.vars().Ez, 1));
+
+                rtgridB1 = texGen.const(gridtexwidth,gridtexwidth,new THREE.Vector4(gui.vars().Bx,gui.vars().By,gui.vars().Bz, 1));
+                rtgridB2 = texGen.const(gridtexwidth,gridtexwidth,new THREE.Vector4(gui.vars().Bx,gui.vars().By,gui.vars().Bz, 1));
+                break;
+
                 break;
 
 
@@ -149,7 +158,7 @@ function TexProcessor(renderer){
 
         //fixme debug
         //which texture to display in debug mode
-        debugTex(rtgridJ);
+        debugTex(rtgridE1);
     }
 
     //calculation step
@@ -161,6 +170,7 @@ function TexProcessor(renderer){
         //Acceleration
         quad.material = accelerationShader;
         accelerationShader.uniforms.dt.value = dt;
+        accelerationShader.uniforms.drag.value = gui.vars().drag;
         accelerationShader.uniforms.textureVelocity.value = pingpong? rtVelocity1 : rtVelocity2;
         accelerationShader.uniforms.textureGridE.value = pingpong? rtgridE1 : rtgridE2;
         accelerationShader.uniforms.textureGridB.value = pingpong? rtgridB1 : rtgridB2;
@@ -201,8 +211,10 @@ function TexProcessor(renderer){
         //E force
         quad.material = gridEShader;
         gridEShader.uniforms.dt.value = dt;
+        gridEShader.uniforms.mu0.value = gui.vars().mu0;
         gridEShader.uniforms.textureGridE.value = pingpong? rtgridE1 : rtgridE2;
         gridEShader.uniforms.textureGridB.value = pingpong? rtgridB1 : rtgridB2;
+
 
 
         renderer.render(ppscene,ppcamera, pingpong? rtgridE2 : rtgridE1);
