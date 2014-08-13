@@ -357,6 +357,7 @@ Shaders = {
                 "vec2 zuv=uv;",
                 "float posz = col+row*width;",
                 "posz=mod((posz+gridsize+h),gridsize);",
+                "if(posz==gridsize){posz=0.0;}",//workaround: for rounding error at gridsize=7,14,15....
 
                 "float tx = uv.x*(gridsize*width);",
                 "float ty = uv.y*(gridsize*width);",
@@ -375,6 +376,7 @@ Shaders = {
 
                 "zuv.y = row * gridsize + localy;",
                 "zuv.y = (zuv.y)/(gridsize*width);",
+
 
                 "return vec4(x,y,zuv);",
 
@@ -408,7 +410,7 @@ Shaders = {
                 "float ry = ryl-ryr;",
                 "float rz = rzl-rzr;",
 
-
+                //"if(vecuv.y==0.0){return vec3(0.0,0.1,0.0);}else{return vec3(0.0,0.0,0.0);}",
                 "return vec3(rx,ry,rz);",
 
 
@@ -423,7 +425,7 @@ Shaders = {
                 "vec3 rotB = rotorNeg(uv);",
                 "vec3 j =  texture2D(textureGridJ,uv).xyz;",
                 "vec3 E_old = texture2D(textureGridE,uv).xyz;",
-                "vec3 E_new = E_old + dt*(rotB-mu0*j)/eps0;",
+                "vec3 E_new =  E_old + dt*(rotB-mu0*j)/eps0;",
 
 
 
@@ -495,6 +497,8 @@ Shaders = {
                 "vec2 zuv=uv;",
                 "float posz = col+row*width;",
                 "posz=mod((posz+h),gridsize);",
+                "if(posz==gridsize){posz=0.0;}",//workaround: for rounding error at gridsize=7,14,15....
+
 
                 "float tx = uv.x*(gridsize*width);",
                 "float ty = uv.y*(gridsize*width);",
