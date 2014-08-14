@@ -29,6 +29,7 @@ function Gui(){
 
         this.particleMode = 'all';
         this.gridMode = 'all';
+        this.texture = 'position';
         this.gridSingleIndex = 0;
 
 
@@ -60,6 +61,7 @@ function Gui(){
 
     var f1 = gui.addFolder('B');
     var f2 = gui.addFolder('E');
+    var f3 = gui.addFolder('debug');
 
     f1.add(text,'Bx');
     f1.add(text,'By');
@@ -71,7 +73,7 @@ function Gui(){
     f2.add(text,'mu0');
     f2.add(text,'eps0');
 
-
+    f3.add(text,'texture',['position', 'velocity' , 'acceleration' , 'E', 'B', 'J']);
 
 
     var obj = {reset: function(){reset()}};
@@ -82,7 +84,7 @@ function Gui(){
     var debug= {debug: function(){
         sim.debugScene();
     }}
-    gui.add(debug,'debug');
+    f3.add(debug,'debug');
 
 
     //globally access the values through this

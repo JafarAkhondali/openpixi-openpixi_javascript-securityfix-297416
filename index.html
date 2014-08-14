@@ -27,23 +27,24 @@
 
     //todo:
     //gui debug mode folder + drop down
-    //gridsize == 7 issue
-
+    //testen auf anderen pc
 
 
     //check if WebGL is supported
     if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
+    //gui
+    var gui = new Gui();
+
     //global variables
-    var PWIDTH = 100; // sqrt(number of max particles)
+    var PWIDTH = Math.ceil(Math.sqrt(gui.vars().Particles));//100; // sqrt(number of max particles)
     var BOUNDS = 400; //Particle coordinates range from -bounds/2 to bounds/2
 
     //this is where we render to
     var container = document.createElement( 'div' );
     document.body.appendChild( container );
 
-    //gui
-    var gui = new Gui();
+
 
 
     //stats
@@ -54,6 +55,7 @@
 
     //simulator
     var sim = new Simulator();
+    var number = 100;
 
     function reset(){
         sim.reset();
@@ -63,6 +65,7 @@
 
 
 </script>
+
 
 </body>
 

@@ -156,9 +156,30 @@ function TexProcessor(renderer){
 
         rtgridJ = texGen.const(gridtexwidth,gridtexwidth,new THREE.Vector4(0,0,0,1));
 
-        //fixme debug
+
         //which texture to display in debug mode
-        debugTex(rtgridE1);
+
+        switch(gui.vars().texture){
+            case 'position':
+                debugTex(rtPosition1);
+                break;
+            case 'velocity':
+                debugTex(rtVelocity1);
+                break;
+            case 'acceleration':
+                debugTex(rtAcceleration1);
+                break;
+            case 'E':
+                debugTex(rtgridE1);
+                break;
+            case 'B':
+                debugTex(rtgridB1);
+                break;
+            case 'J':
+                debugTex(rtgridJ);
+
+                break;
+        }
     }
 
     //calculation step

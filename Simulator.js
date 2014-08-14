@@ -193,7 +193,7 @@ function Simulator(){
 
     //the simulation loop
     function simulate(){
-
+        PWIDTH = Math.ceil(Math.sqrt(gui.vars().Particles));
         //the simulation stops this way if another window/tab is open
         requestAnimationFrame(simulate);
 

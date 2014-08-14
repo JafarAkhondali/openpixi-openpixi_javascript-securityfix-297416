@@ -16,7 +16,7 @@
 //
 //vertexShader: document.getElementById('someVertexShader').textContent,
 //fragmentShader: document.getElementById('someFragmentShader').textContent};
-
+//var test = PWIDTH;//Math.ceil(Math.sqrt(gui.vars().Particles));
 Shaders = {
 
 
@@ -574,7 +574,10 @@ Shaders = {
 
     })},
     //calculates current density at every grid point
-    getGridJShader: function(){return new THREE.ShaderMaterial({
+
+    getGridJShader: function(){
+
+        return new THREE.ShaderMaterial({
     //fixme: replace the for loops with something better
         uniforms:{
 
@@ -641,18 +644,19 @@ Shaders = {
 
 
         "void main(){",
-            "float maxIter = pcount;",
+
+            "int maxIter = int(pcount);",
             "float LOWER_BOUNDS = -200.0;",
             "float UPPER_BOUNDS = 200.0;",
             "vec2 uv = gl_FragCoord.xy/resolution.xy;",
             "vec3 j = vec3(0.0,0.0,0.0);",
 
 
-            "for(int y = 0; y<100;y++){",
+            "for(int y = 0; y<"+ PWIDTH +";y++){",
 
-                "for(int x = 0; x<100;x++){",
-                    "maxIter-=1.0;",
-                    "if(maxIter>=0.0){",
+                "for(int x = 0; x <"+ PWIDTH+";x++){",
+                    "maxIter-=1;",
+                    "if(maxIter>=0){",
                     "vec2 look = vec2((float(x)+0.5)/100.0,(float(y)+0.5)/100.0);",
                     "vec3 position = texture2D(texturePosition,look).xyz;",
                     "vec3 velocity = texture2D(textureVelocity,look).xyz;",
@@ -660,9 +664,12 @@ Shaders = {
                     "if(abs(gp.x-uv.x)<=0.0001&&abs(gp.y-uv.y)<=0.0001){",
 
                          "j+=velocity*jscale;",//scale it down a little
-                         //"j=vec3(0.0,0.1,0.02);",
+                         //"j=vec3(0.0,1.1,0.02);",
 
-                    "}}",
+                    "}",
+
+
+                 "}",
 
 
 
