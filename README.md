@@ -75,7 +75,7 @@ can now be looked up by choosing a tile index according to the z position and th
 The position (0,0,0) relates to the bottom left pixel, while (k,k,k) would be the bottom right pixel of the last tile.
 Have a look at getUV() inside the acceleration shader for details about how the correct grid point for each position is found.
 
-![texture][https://raw.githubusercontent.com/openpixi/openpixi_javascript/master/img.png]
+![texture](https://raw.githubusercontent.com/openpixi/openpixi_javascript/master/img.png)
 
 
 ##Usage:
