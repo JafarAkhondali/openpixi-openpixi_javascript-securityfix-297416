@@ -16,7 +16,6 @@
 //
 //vertexShader: document.getElementById('someVertexShader').textContent,
 //fragmentShader: document.getElementById('someFragmentShader').textContent};
-//var test = PWIDTH;//Math.ceil(Math.sqrt(gui.vars().Particles));
 Shaders = {
 
 
@@ -657,7 +656,7 @@ Shaders = {
                 "for(int x = 0; x <"+ PWIDTH+";x++){",
                     "maxIter-=1;",
                     "if(maxIter>=0){",
-                    "vec2 look = vec2((float(x)+0.5)/100.0,(float(y)+0.5)/100.0);",
+                    "vec2 look = vec2((float(x)+0.5)/float("+PWIDTH+"),(float(y)+0.5)/float("+PWIDTH+"));",
                     "vec3 position = texture2D(texturePosition,look).xyz;",
                     "vec3 velocity = texture2D(textureVelocity,look).xyz;",
                     "vec2 gp = getGridPoint(position);",
