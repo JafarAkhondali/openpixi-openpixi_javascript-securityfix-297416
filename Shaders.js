@@ -246,13 +246,13 @@ Shaders = {
                 //now round to nearest fp
                 "float lx = floor(x);",
                 "float ly = floor(y);",
-                "float lz = floor(z);",
+                "float lz = floor(z)+0.5;", //workaround for rounding errors
 
                 "float width = ceil(sqrt(gridsize));",
                 "width = abs(width);", //workaround for strange bug on some systems
 
                 "float row = floor(lz/width);",
-                "float col = mod(lz,width);",
+                "float col = floor(mod(lz,width));",//workaround for rounding errors
 
                 "float qu = col*(gridsize)+lx;",
                 "float qv = row*(gridsize)+ly;",
@@ -636,14 +636,14 @@ Shaders = {
             //now round to nearest fp
             "float lx = floor(x);",
             "float ly = floor(y);",
-            "float lz = floor(z);",
+            "float lz = floor(z)+0.5;",
 
             "float width = ceil(sqrt(gridsize));",
             "width = abs(width);", //workaround for strange bug on some systems
 
 
             "float row = floor(lz/width);",
-            "float col = mod(lz,width);",
+            "float col = floor(mod(lz,width));",
 
             "float qu = col*(gridsize)+lx;",
             "float qv = row*(gridsize)+ly;",
@@ -731,7 +731,7 @@ Shaders = {
             //now round to nearest fp
             "float lx = floor(x);",
             "float ly = floor(y);",
-            "float lz = floor(z);",
+            "float lz = floor(z)+0.5;",
 
 
             "float width = ceil(sqrt(gridsize));",
@@ -740,7 +740,7 @@ Shaders = {
 
 
             "float row = floor(lz/width);",
-            "float col = mod(lz,width);",
+            "float col = floor(mod(lz,width));",
 
 
             "float qu = col*(gridsize)+lx;",
@@ -818,7 +818,7 @@ Shaders = {
             //now round to nearest fp
             "float lx = floor(x);",
             "float ly = floor(y);",
-            "float lz = floor(z);",
+            "float lz = floor(z)+0.5;",
 
 
             "float width = ceil(sqrt(gridsize));",
@@ -827,7 +827,7 @@ Shaders = {
 
 
             "float row = floor(lz/width);",
-            "float col = mod(lz,width);",
+            "float col = floor(mod(lz,width));",
 
 
             "float qu = col*(gridsize)+lx;",
@@ -910,7 +910,7 @@ Shaders = {
             //now round to nearest fp
             "float lx = floor(x);",
             "float ly = floor(y);",
-            "float lz = floor(z);",
+            "float lz = floor(z)+0.5;",
 
 
             "float width = ceil(sqrt(gridsize));",
@@ -919,7 +919,7 @@ Shaders = {
 
 
             "float row = floor(lz/width);",
-            "float col = mod(lz,width);",
+            "float col = floor(mod(lz,width));",
 
 
             "float qu = col*(gridsize)+lx;",
