@@ -249,6 +249,7 @@ Shaders = {
                 "float lz = floor(z);",
 
                 "float width = ceil(sqrt(gridsize));",
+                "width = abs(width);", //workaround for strange bug on some systems
 
                 "float row = floor(lz/width);",
                 "float col = mod(lz,width);",
@@ -328,9 +329,13 @@ Shaders = {
 
             "float width = ceil(sqrt(gridsize));",
 
+
             "vec4 getSteps(vec2 uv,float h){",
 
-                //calculate new uv vector if x changes by +h
+                "width = abs(width);", //workaround for strange bug on some systems
+
+
+            //calculate new uv vector if x changes by +h
 
                 "float x = uv.x*(gridsize*width);",
                 "float col = floor(uv.x*width);",
@@ -418,7 +423,9 @@ Shaders = {
 
             "void main(){",
 
-                "vec2 uv = vec2(gl_FragCoord.x/(gridsize*width),gl_FragCoord.y/(gridsize*width));",
+            "width = abs(width);", //workaround for strange bug on some systems
+
+            "vec2 uv = vec2(gl_FragCoord.x/(gridsize*width),gl_FragCoord.y/(gridsize*width));",
 
 
                 "vec3 rotB = rotorNeg(uv);",
@@ -467,9 +474,12 @@ Shaders = {
 
             "float width = ceil(sqrt(gridsize));",
 
+
             "vec4 getSteps(vec2 uv,float h){",
 
-                //calculate new uv vector if x changes by +h
+                "width = abs(width);", //workaround for strange bug on some systems
+
+            //calculate new uv vector if x changes by +h
 
                 "float x = uv.x*(gridsize*width);",
                 "float col = floor(uv.x*width);",
@@ -557,7 +567,10 @@ Shaders = {
 
             "void main(){",
 
-                "vec2 uv = vec2(gl_FragCoord.x/(gridsize*width),gl_FragCoord.y/(gridsize*width));",
+            "width = abs(width);", //workaround for strange bug on some systems
+
+
+            "vec2 uv = vec2(gl_FragCoord.x/(gridsize*width),gl_FragCoord.y/(gridsize*width));",
 
                 "vec3 rotE = rotor(uv);",
                 "vec3 B_old = texture2D(textureGridB,uv).xyz;",
@@ -626,6 +639,8 @@ Shaders = {
             "float lz = floor(z);",
 
             "float width = ceil(sqrt(gridsize));",
+            "width = abs(width);", //workaround for strange bug on some systems
+
 
             "float row = floor(lz/width);",
             "float col = mod(lz,width);",
@@ -720,6 +735,8 @@ Shaders = {
 
 
             "float width = ceil(sqrt(gridsize));",
+            "width = abs(width);", //workaround for strange bug on some systems
+
 
 
             "float row = floor(lz/width);",
@@ -805,6 +822,8 @@ Shaders = {
 
 
             "float width = ceil(sqrt(gridsize));",
+            "width = abs(width);", //workaround for strange bug on some systems
+
 
 
             "float row = floor(lz/width);",
@@ -895,6 +914,8 @@ Shaders = {
 
 
             "float width = ceil(sqrt(gridsize));",
+            "width = abs(width);", //workaround for strange bug on some systems
+
 
 
             "float row = floor(lz/width);",
