@@ -332,57 +332,58 @@ Shaders = {
 
             "vec4 getSteps(vec2 uv,float h){",
 
-                "width = abs(width);", //workaround for strange bug on some systems
-
+            "width = abs(width);", //workaround for strange bug on some systems
 
             //calculate new uv vector if x changes by +h
 
-                "float x = uv.x*(gridsize*width);",
-                "float col = floor(uv.x*width);",
-                "float localx = x-col*gridsize;",
-                "localx = mod((localx+gridsize+h),gridsize);",
-                "x=col*gridsize+localx;",
+            "float x = uv.x*(gridsize*width);",
+            "float col = floor(uv.x*width);",
+            "float localx = x-col*gridsize;",
+            "localx = mod((localx+h),gridsize);",
+            "x=col*gridsize+localx;",
 
-                "x = x/(gridsize*width);",
-
-
-                //calculate new uv vector if y changes by +h
-
-                "float y = uv.y*(gridsize*width);",
-                "float row = floor(uv.y*width);",
-                "float localy = y-row*gridsize;",
-                "localy = mod((localy+gridsize+h),gridsize);",
-                "y = row*gridsize+localy;",
-
-                "y = y/(gridsize*width);",
-
-                //calculate new uv vector if z changes by +h
-
-                "vec2 zuv=uv;",
-                "float posz = col+row*width;",
-                "posz=mod((posz+gridsize+h),gridsize);",
-                "if(posz==gridsize){posz=0.0;}",//workaround: for rounding error at gridsize=7,14,15....
-
-                "float tx = uv.x*(gridsize*width);",
-                "float ty = uv.y*(gridsize*width);",
-
-                //per tile coordinate
-                "localx = tx - col*gridsize;",
-
-                "localy = ty - row*gridsize;",
-
-                //new col and row
-                "col = mod(posz,width);",
-                "row = floor(posz/width);",
-
-                "zuv.x = col * gridsize + localx;",
-                "zuv.x = (zuv.x)/(gridsize*width);",
-
-                "zuv.y = row * gridsize + localy;",
-                "zuv.y = (zuv.y)/(gridsize*width);",
+            "x = x/(gridsize*width);",
 
 
-                "return vec4(x,y,zuv);",
+            //calculate new uv vector if y changes by +h
+
+            "float y = uv.y*(gridsize*width);",
+            "float row = floor(uv.y*width);",
+            "float localy = y-row*gridsize;",
+            "localy = mod((localy+h),gridsize);",
+            "y = row*gridsize+localy;",
+
+            "y = y/(gridsize*width);",
+
+
+            //calculate new uv vector if z changes by +h
+
+            "vec2 zuv=uv;",
+            "float posz = col+row*width;",
+            "posz=floor(mod((posz+h+0.5),gridsize));",
+            "if(posz==gridsize){posz=0.0;}",//workaround: for rounding error at gridsize=7,14,15....
+
+
+            "float tx = uv.x*(gridsize*width);",
+            "float ty = uv.y*(gridsize*width);",
+
+            //per tile coordinate
+            "localx = tx - col*gridsize;",
+
+            "localy = ty - row*gridsize;",
+
+            //new col and row
+            "col = floor(mod(posz+0.5,width));",
+            "row = floor((posz+0.5)/width);",
+
+            "zuv.x = col * gridsize + localx;",
+            "zuv.x = (zuv.x)/(gridsize*width);",
+
+            "zuv.y = row * gridsize + localy;",
+            "zuv.y = (zuv.y)/(gridsize*width);",
+
+            "return vec4(x,y,zuv.x, zuv.y);",
+
 
             "}",
 
@@ -505,7 +506,7 @@ Shaders = {
 
                 "vec2 zuv=uv;",
                 "float posz = col+row*width;",
-                "posz=mod((posz+h),gridsize);",
+                "posz=floor(mod((posz+h+0.5),gridsize));",
                 "if(posz==gridsize){posz=0.0;}",//workaround: for rounding error at gridsize=7,14,15....
 
 
@@ -518,8 +519,8 @@ Shaders = {
                 "localy = ty - row*gridsize;",
 
                 //new col and row
-                "col = mod(posz,width);",
-                "row = floor(posz/width);",
+                "col = floor(mod(posz+0.5,width));",
+                "row = floor((posz+0.5)/width);",
 
                 "zuv.x = col * gridsize + localx;",
                 "zuv.x = (zuv.x)/(gridsize*width);",
