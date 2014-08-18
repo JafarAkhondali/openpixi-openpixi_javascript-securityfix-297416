@@ -29,7 +29,7 @@ function Simulator(){
         initThreejs();
 
         processor = new TexProcessor(renderer);
-
+        processor.debugTex(gui.vars().texture);
 
         initScene();
 
@@ -246,6 +246,9 @@ function Simulator(){
     //see gui
     this.debugScene = function(){
             dispTex = !dispTex;
+    }
+    this.changeDebugTex = function(){
+        processor.debugTex(gui.vars().texture);
     }
 
 

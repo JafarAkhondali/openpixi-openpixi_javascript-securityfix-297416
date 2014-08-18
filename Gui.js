@@ -73,10 +73,18 @@ function Gui(){
     f2.add(text,'mu0');
     f2.add(text,'eps0');
 
-    f3.add(text,'texture',['position', 'velocity' , 'acceleration' , 'E', 'B', 'J']);
+    var test =  f3.add(text,'texture',['position', 'velocity' , 'acceleration' , 'E', 'B', 'J']);
 
+    test.onFinishChange(function(value){
 
-    var obj = {reset: function(){reset()}};
+        sim.changeDebugTex();
+
+    });
+
+    var obj = {reset: function(){
+        sim.reset();
+        sim.changeDebugTex();
+    }};
     gui.add(obj,'reset');
 
 

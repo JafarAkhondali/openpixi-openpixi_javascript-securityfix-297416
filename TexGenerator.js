@@ -124,8 +124,7 @@ function TexGenerator(renderer,ppscene,ppcamera,quad){
     }
 
     //returns a texture where only the texel at a certain index will have a value other than [0, 0, 0]
-    this.single = function(width,height,index){
-
+    this.single = function(width,height,index,vector){
 
         var a = new Float32Array(width*height * 4);
 
@@ -140,10 +139,10 @@ function TexGenerator(renderer,ppscene,ppcamera,quad){
 
 
         k=index;
-        a[k*4+0]=0;
-        a[k*4+1]=0.1;
-        a[k*4+2]=0;
-        a[k*4+3]=1;
+        a[k*4+0]=vector.x;
+        a[k*4+1]=vector.y;
+        a[k*4+2]=vector.z;
+        a[k*4+3]=vector.w;
 
 
 

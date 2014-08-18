@@ -126,8 +126,8 @@ function TexProcessor(renderer){
                 rtgridB2 = texGen.const(gridtexwidth,gridtexwidth,new THREE.Vector4(gui.vars().Bx,gui.vars().By,gui.vars().Bz, 1));
                 break;
             case 'single':
-                rtgridE1 = texGen.single(gridtexwidth,gridtexwidth,gui.vars().gridSingleIndex);
-                rtgridE2 = texGen.single(gridtexwidth,gridtexwidth,gui.vars().gridSingleIndex);
+                rtgridE1 = texGen.single(gridtexwidth,gridtexwidth,gui.vars().gridSingleIndex,new THREE.Vector4(gui.vars().Ex,gui.vars().Ey,gui.vars().Ez, 1));
+                rtgridE2 = texGen.single(gridtexwidth,gridtexwidth,gui.vars().gridSingleIndex,new THREE.Vector4(gui.vars().Ex,gui.vars().Ey,gui.vars().Ez, 1));
 
                 rtgridB1 = texGen.const(gridtexwidth,gridtexwidth,new THREE.Vector4(gui.vars().Bx,gui.vars().By,gui.vars().Bz, 1));
                 rtgridB2 = texGen.const(gridtexwidth,gridtexwidth,new THREE.Vector4(gui.vars().Bx,gui.vars().By,gui.vars().Bz, 1));
@@ -157,29 +157,7 @@ function TexProcessor(renderer){
         rtgridJ = texGen.const(gridtexwidth,gridtexwidth,new THREE.Vector4(0,0,0,1));
 
 
-        //which texture to display in debug mode
 
-        switch(gui.vars().texture){
-            case 'position':
-                debugTex(rtPosition1);
-                break;
-            case 'velocity':
-                debugTex(rtVelocity1);
-                break;
-            case 'acceleration':
-                debugTex(rtAcceleration1);
-                break;
-            case 'E':
-                debugTex(rtgridE1);
-                break;
-            case 'B':
-                debugTex(rtgridB1);
-                break;
-            case 'J':
-                debugTex(rtgridJ);
-
-                break;
-        }
     }
 
     //calculation step
@@ -290,7 +268,35 @@ function TexProcessor(renderer){
 
 
     //sets up texture debug scene
-    function debugTex(textureToDisplay){
+    this.debugTex = function(string){
+        debugScene = new THREE.Scene();
+
+
+        var textureToDisplay = rtPosition1;
+
+        switch(string){
+            case 'position':
+                textureToDisplay = rtPosition1;
+                break;
+            case 'velocity':
+                textureToDisplay = rtVelocity1;
+                break;
+            case 'acceleration':
+                textureToDisplay = rtAcceleration1;
+                break;
+            case 'E':
+                textureToDisplay = rtgridE1;
+                break;
+            case 'B':
+                textureToDisplay = rtgridB1;
+                break;
+            case 'J':
+                textureToDisplay = rtgridJ;
+
+                break;
+        }
+
+
         var geometry = new THREE.PlaneGeometry(textureToDisplay.width,textureToDisplay.height);
 
         var material = new THREE.MeshBasicMaterial({map: textureToDisplay});
