@@ -39,7 +39,7 @@ The program uses textures as a means of storing information about the particles 
 This is done by storing these values as the red, green and blue values of a pixel. A velocity vector of
 (0,1,0) would result in a bright red pixel color. Each pixel is assigned one particle.
 These textures are rendered to a full screen quad in an off-screen scene, from where they can be read by
-A fragment shader, which in turn updates the values. Since the shader cannot write to the same texture it reads from, 
+a fragment shader, which in turn updates the values. Since the shader cannot write to the same texture it reads from, 
 the values are then updated and the texture is written to another texture. This process is often referred to as
 ping-pong-rendering. This way the GPU's computing powers can be used to our advantage.
 
