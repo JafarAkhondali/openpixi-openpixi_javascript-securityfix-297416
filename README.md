@@ -12,9 +12,23 @@ Javascript version of OpenPixi
 This is the JavaScript version of OpenPixi. It uses three.js for creating webGL content and dat.gui
 for the user interface. Mind that it is still a work in progress.
 
-To work with the code some knowledge of JavaScript and general understanding ofthe graphics pipeline is needed. 
-Furhtermore you should have a look at the three.js and dat.gui documentation and the OpenGL Shading Language (GLSL).
+To work with the code some knowledge of JavaScript and general understanding of the graphics pipeline is needed. 
+Furthermore you should have a look at the three.js and dat.gui documentation and the OpenGL Shading Language (GLSL).
 
+
+##Usage:
+
+After downloading you can run it by opening index.html in a browser of your choice. 
+So far it has been tested successfully in Google Chrome, Mozilla Firefox and Internet Explorer. 
+Note that in order to make it run floating-point textures and vertex shader textures need to be
+supported on your device. 
+
+A few variables can be changed using the GUI. To make the particles move a value for E, m and q must be set.
+To apply changes, reset needs to be clicked.
+Currently particle movement and solving of the Lorentz- as well as Maxwell equations are implemented. 
+
+To edit the source code you can use any IDE that supports HTML and JavaScript or just a simple text
+editor.
 
 ##About the Program:
 
@@ -25,11 +39,15 @@ The program uses textures as a means of storing information about the particles 
 This is done by storing these values as the red, green and blue values of a pixel. A velocity vector of
 (0,1,0) would result in a bright red pixel color. Each pixel is assigned one particle.
 These textures are rendered to a full screen quad in an off-screen scene, from where they can be read by
-a fragment shader, which in turn updates the values. Since the shader cannot write to the same texture it reads from, 
+A fragment shader, which in turn updates the values. Since the shader cannot write to the same texture it reads from, 
 the values are then updated and the texture is written to another texture. This process is often referred to as
 ping-pong-rendering. This way the GPU's computing powers can be used to our advantage.
 
-The particle system is modelled as a geometry where each vertex represents a particle. A vertex shader
+There are textures for particle position, velocity and acceleration. For the grid there are textures for
+the electric and magnetic field as well as the total current density. These are found inside TexProcessor.js 
+and created inside TexGenerator.js
+
+The particle system is modeled as a geometry where each vertex represents a particle. A vertex shader
 then in turn reads the particle's position from the respective texture and updates the vertex position.
 The lookup is done through the particle's unique initial position along the X and Y axis.
 
@@ -41,7 +59,7 @@ updated textures from the texture processor and updates the particle system and 
 
 The following things are needed for ping pong rendering in our case: 
  
-* a separate scene aswell as camera and a full screen quad to which the textures can be bound
+* a separate scene as well as camera and a full screen quad to which the textures can be bound
 
    the quad is a simple mesh created using the THREE.PlaneGeometry, the camera is positioned in a way that the mesh
    appears full screen. The mesh is part of this off-screen scene. A scene-object consists of a geometry and a material.
@@ -53,7 +71,7 @@ The following things are needed for ping pong rendering in our case:
    out how exactly textures are created.
 * the same renderer we use for the on-screen scene
 
-   only this time we render to a texture not the screen.   
+   only this time we render to a texture not the screen. The ping pong rendering itself happens in TexProcessor.js.simulate().
 * a shader which is applied to the quad when rendering
 
    for updating the texture values a pass through vertex shader is used resulting in no change in the quad geometry.
@@ -73,25 +91,12 @@ more complex way:
 The k^3 gridpoints are organized as z x*y tiles inside a larger texture as in the picture below. Each grid point
 can now be looked up by choosing a tile index according to the z position and the x and y coordinate inside that tile.
 The position (0,0,0) relates to the bottom left pixel, while (k,k,k) would be the bottom right pixel of the last tile.
-Have a look at getUV() inside the acceleration shader for details about how the correct grid point for each position is found.
+Have a look at getUV() inside the acceleration shader (Shaders.js.getAccelerationShader()) for details about how the correct grid point for each position is found.
 
 ![texture](https://raw.githubusercontent.com/openpixi/openpixi_javascript/master/img.png)
 
 
-##Usage:
 
-After downloading you can run it by opening index.html in a browser of your choice. 
-So far it has been tested successfully in Google Chrome, Mozilla Firefox and Internet Explorer. 
-Note that in order to make it run floating-point textures and vertex shader textures need to be
-supported on your device. 
-
-A few variables can be changed using the GUI. To make the particles move a value for E, m and q must be set.
-To apply changes, reset needs to be clicked.
-Currently particle movement and solving of the Lorentz-equation are implemented. Solving of the 
-Maxwell Equations is under way.
-
-To edit the source code you can use any IDE that supports HTML and JavaScript or just a simple text
-editor.
 
 
 ##External links
@@ -122,5 +127,4 @@ editor.
    * http://www.khronos.org/opengles/sdk/docs/reference_cards/OpenGL-ES-2_0-Reference-card.pdf
 
 	
-
 
