@@ -45,6 +45,8 @@ function TexProcessor(renderer){
         initTextures();
 
 
+
+
     }
     this.init();
 
@@ -258,6 +260,16 @@ function TexProcessor(renderer){
         return rtgridJ;
     }
 
+    //texture debug
+
+    //corrects scene when window size changes - in the debug scene
+    window.addEventListener('resize', onWindowResize,false);
+
+    function onWindowResize(){
+        debugCamera.aspect = window.innerWidth / window.innerHeight;
+        debugCamera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
 
     //renders the texture debug scene to the screen
     this.renderDebugTex = function(){
@@ -271,6 +283,8 @@ function TexProcessor(renderer){
     this.debugTex = function(string){
         debugScene = new THREE.Scene();
 
+        //TODO: everytime the debugtexture is changed in the dropdown menu, the pixel are read...change as desired
+        readPixel(string);
 
         var textureToDisplay = rtPosition1;
 
@@ -313,6 +327,103 @@ function TexProcessor(renderer){
 
 
         debugScene.add(hudMesh);
+
+        //mesh for position
+        geometry = new THREE.PlaneGeometry(rtPosition1.width,rtPosition1.height);
+
+        material = new THREE.MeshBasicMaterial({map: rtPosition1});
+        var meshPos = new THREE.Mesh(geometry, material);
+
+        debugCamera.position.z = 75;
+        meshPos.position.z = 0;
+        meshPos.position.x = -40;
+        debugScene.add(meshPos);
+
+        //mesh for E
+        geometry = new THREE.PlaneGeometry(rtgridE1.width,rtgridE1.height);
+
+        material = new THREE.MeshBasicMaterial({map: rtgridE1});
+        var meshE = new THREE.Mesh(geometry, material);
+
+        debugCamera.position.z = 75;
+        meshE.position.z = 0;
+        meshE.position.x = 10;
+        debugScene.add(meshE);
+
+        //mesh for B
+        geometry = new THREE.PlaneGeometry(rtgridB1.width,rtgridB1.height);
+
+        material = new THREE.MeshBasicMaterial({map: rtgridB1});
+        var meshB = new THREE.Mesh(geometry, material);
+
+        debugCamera.position.z = 75;
+        meshB.position.z = 0;
+        meshB.position.x = 20;
+        debugScene.add(meshB);
+
+
+
+
+
+
+
+    }
+
+    function readPixel(string){
+
+        //threejs texture
+        var t = rtPosition1;
+
+        switch(string){
+            case 'position':
+                t = rtPosition1;
+                break;
+            case 'velocity':
+                t = rtVelocity1;
+                break;
+            case 'acceleration':
+                t = rtAcceleration1;
+                break;
+            case 'E':
+                t = rtgridE1;
+                break;
+            case 'B':
+                t = rtgridB1;
+                break;
+            case 'J':
+                t = rtgridJ;
+
+                break;
+        }
+
+
+        //render context
+        var gl = renderer.getContext("experimiental-webgl",{preserveDrawingBuffer: true});
+
+        //framebuffer to bind texture to
+        var fb = gl.createFramebuffer();
+
+        var texture = t.__webglTexture;
+
+        // make this the current frame buffer
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+
+        gl.framebufferTexture2D(
+            gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+            gl.TEXTURE_2D, texture, 0);
+
+        var pixelvalues = new Float32Array(4*Math.pow(t.width,2));
+        //readpixels(x,y,width,height,format,type,object)
+        //FIXME: not entirely sure how/why this works, please test
+        gl.readPixels(0,0, t.width, t.height,gl.RGBA,gl.FLOAT,pixelvalues);
+
+        //unbind fb
+        gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+
+        console.log(pixelvalues);
+
+
+
     }
 
 
