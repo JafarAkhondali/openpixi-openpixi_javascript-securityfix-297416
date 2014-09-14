@@ -285,6 +285,7 @@ function TexProcessor(renderer){
 
         //TODO: everytime the debugtexture is changed in the dropdown menu, the pixel are read...change as desired
         readPixel(string);
+        readPixelEncode(string);
 
         var textureToDisplay = rtPosition1;
 
@@ -369,6 +370,7 @@ function TexProcessor(renderer){
 
     }
 
+    //does not work on every device!
     function readPixel(string){
 
         //threejs texture
@@ -421,6 +423,78 @@ function TexProcessor(renderer){
         gl.bindFramebuffer(gl.FRAMEBUFFER,null);
 
         console.log(pixelvalues);
+
+
+
+    }
+
+    function readPixelEncode(string){
+
+
+        //TODO: shader can only give back one coordinate of every pixel: x, y, z, or w
+        //to have all 4 components, 4 render passes and array merging would be one idea...
+        var encodeShader = Shaders.getEncodeShader('x');
+
+
+        //threejs texture
+        var t = rtPosition1;
+
+        switch(string){
+            case 'position':
+                t = rtPosition1;
+                break;
+            case 'velocity':
+                t = rtVelocity1;
+                break;
+            case 'acceleration':
+                t = rtAcceleration1;
+                break;
+            case 'E':
+                t = rtgridE1;
+                break;
+            case 'B':
+                t = rtgridB1;
+                break;
+            case 'J':
+                t = rtgridJ;
+
+                break;
+        }
+
+
+
+        var outTex = texGen.unsigned(t.width, t.height);
+
+        quad.material = encodeShader;
+        encodeShader.uniforms.texture.value = t;
+        renderer.render(ppscene,ppcamera,outTex);
+
+        //render context
+        var gl = renderer.getContext("experimiental-webgl",{preserveDrawingBuffer: true});
+
+        //framebuffer to bind texture to
+        var fb = gl.createFramebuffer();
+
+        var texture = outTex.__webglTexture;
+
+        // make this the current frame buffer
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+
+        gl.framebufferTexture2D(
+            gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+            gl.TEXTURE_2D, texture, 0);
+
+        var pixelvalues = new Uint8Array(4*Math.pow(outTex.width,2));
+        //readpixels(x,y,width,height,format,type,object)
+        gl.readPixels(0,0, outTex.width, outTex.height,gl.RGBA,gl.UNSIGNED_BYTE,pixelvalues);
+
+        //unbind fb
+        gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+
+
+        var output = new Float32Array(pixelvalues.buffer);
+
+        console.log(output);
 
 
 

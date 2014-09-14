@@ -271,6 +271,37 @@ function TexGenerator(renderer,ppscene,ppcamera,quad){
 
     }
 
+    //returns texture of unsigned byte type
+    this.unsigned = function(width,height){
+
+        var a = new Uint8Array(width*height * 4);
+
+        /*for (var k = 0; k < width*height; k++) {
+
+            a[k*4+0]=Math.random();
+            a[k*4+1]=Math.random();
+            a[k*4+2]=Math.random();
+            a[k*4+3]=1;
+
+        }*/
+
+
+
+
+
+        var texture = new THREE.DataTexture( a, width, height, THREE.RGBAFormat, THREE.UnsignedByteType );
+        texture.minFilter = THREE.NearestFilter;
+        texture.magFilter = THREE.NearestFilter;
+        texture.needsUpdate = true;
+        texture.flipY = false;
+
+        var rendertexture = getRenderTarget(width,height);
+        renderTexture(width,height,texture,rendertexture);
+
+        return rendertexture;
+
+    }
+
 
     //renders datatexture to frame buffer object
     function renderTexture( width,height,input,output ) {
