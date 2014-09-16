@@ -415,9 +415,14 @@ function TexProcessor(renderer){
             gl.TEXTURE_2D, texture, 0);
 
         var pixelvalues = new Float32Array(4*Math.pow(t.width,2));
+
+        var error = gl.getError();
         //readpixels(x,y,width,height,format,type,object)
-        //FIXME: not entirely sure how/why this works, please test
         gl.readPixels(0,0, t.width, t.height,gl.RGBA,gl.FLOAT,pixelvalues);
+        error = gl.getError();
+        if(gl.NO_ERROR != error){
+            console.error('Your device does not support reading pixels from floating point textures');
+        }
 
         //unbind fb
         gl.bindFramebuffer(gl.FRAMEBUFFER,null);
@@ -431,9 +436,10 @@ function TexProcessor(renderer){
     function readPixelEncode(string){
 
 
-        //TODO: shader can only give back one coordinate of every pixel: x, y, z, or w
-        //to have all 4 components, 4 render passes and array merging would be one idea...
-        var encodeShader = Shaders.getEncodeShader('x');
+        var encodeShaderX = Shaders.getEncodeShader('x');
+        var encodeShaderY = Shaders.getEncodeShader('y');
+        var encodeShaderZ = Shaders.getEncodeShader('z');
+        var encodeShaderW = Shaders.getEncodeShader('w');
 
 
         //threejs texture
@@ -465,9 +471,59 @@ function TexProcessor(renderer){
 
         var outTex = texGen.unsigned(t.width, t.height);
 
-        quad.material = encodeShader;
-        encodeShader.uniforms.texture.value = t;
+        //read x coordinate
+        quad.material = encodeShaderX;
+        encodeShaderX.uniforms.texture.value = t;
         renderer.render(ppscene,ppcamera,outTex);
+
+        var arrayX = getPixelValueArray(outTex);
+
+        //read y coordinate
+        outTex = texGen.unsigned(t.width, t.height);
+        quad.material = encodeShaderY;
+        encodeShaderY.uniforms.texture.value = t;
+        renderer.render(ppscene,ppcamera,outTex);
+
+        var arrayY = getPixelValueArray(outTex);
+
+        //read z coordinate
+        outTex = texGen.unsigned(t.width, t.height);
+        quad.material = encodeShaderZ;
+        encodeShaderZ.uniforms.texture.value = t;
+        renderer.render(ppscene,ppcamera,outTex);
+
+        var arrayZ = getPixelValueArray(outTex);
+
+        //read w coordinate
+        outTex = texGen.unsigned(t.width, t.height);
+        quad.material = encodeShaderW;
+        encodeShaderW.uniforms.texture.value = t;
+        renderer.render(ppscene,ppcamera,outTex);
+
+        var arrayW = getPixelValueArray(outTex);
+
+
+
+        //merge arrays
+        var mergeArr = new Float32Array(arrayX.length*4);
+
+        for(var i = 0;i<arrayX.length;i++){
+
+            mergeArr[i*4+0] = arrayX[i];
+            mergeArr[i*4+1] = arrayY[i];
+            mergeArr[i*4+2] = arrayZ[i];
+            mergeArr[i*4+3] = arrayW[i];
+
+        }
+
+        console.log(mergeArr);
+
+
+
+    }
+
+    function getPixelValueArray(inTex){
+
 
         //render context
         var gl = renderer.getContext("experimiental-webgl",{preserveDrawingBuffer: true});
@@ -475,7 +531,7 @@ function TexProcessor(renderer){
         //framebuffer to bind texture to
         var fb = gl.createFramebuffer();
 
-        var texture = outTex.__webglTexture;
+        var texture = inTex.__webglTexture;
 
         // make this the current frame buffer
         gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
@@ -484,9 +540,9 @@ function TexProcessor(renderer){
             gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
             gl.TEXTURE_2D, texture, 0);
 
-        var pixelvalues = new Uint8Array(4*Math.pow(outTex.width,2));
+        var pixelvalues = new Uint8Array(4*Math.pow(inTex.width,2));
         //readpixels(x,y,width,height,format,type,object)
-        gl.readPixels(0,0, outTex.width, outTex.height,gl.RGBA,gl.UNSIGNED_BYTE,pixelvalues);
+        gl.readPixels(0,0, inTex.width, inTex.height,gl.RGBA,gl.UNSIGNED_BYTE,pixelvalues);
 
         //unbind fb
         gl.bindFramebuffer(gl.FRAMEBUFFER,null);
@@ -494,13 +550,10 @@ function TexProcessor(renderer){
 
         var output = new Float32Array(pixelvalues.buffer);
 
-        console.log(output);
-
+        return output;
 
 
     }
-
-
 
 
 }
