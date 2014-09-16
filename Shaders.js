@@ -131,13 +131,15 @@ Shaders = {
             "vec3 velocity = texture2D( textureVelocity, uv ).xyz;",
 
             //periodic boundary box:
-            "if ((position.x + velocity.x ) < LOWER_BOUNDS) position.x += UPPER_BOUNDS*2.0;",
-            "if ((position.y + velocity.y ) < LOWER_BOUNDS) position.y += UPPER_BOUNDS*2.0;",
-            "if ((position.z + velocity.z ) < LOWER_BOUNDS) position.z += UPPER_BOUNDS*2.0;",
+            "vec3 newPosition = position + velocity * dt;",
 
-            "if ((position.x + velocity.x ) > UPPER_BOUNDS) position.x -= UPPER_BOUNDS*2.0;",
-            "if ((position.y + velocity.y ) > UPPER_BOUNDS) position.y -= UPPER_BOUNDS*2.0;",
-            "if ((position.z + velocity.z ) > UPPER_BOUNDS) position.z -= UPPER_BOUNDS*2.0;",
+            "if (newPosition.x < LOWER_BOUNDS) position.x += UPPER_BOUNDS*2.0;",
+            "if (newPosition.y < LOWER_BOUNDS) position.y += UPPER_BOUNDS*2.0;",
+            "if (newPosition.z < LOWER_BOUNDS) position.z += UPPER_BOUNDS*2.0;",
+
+            "if (newPosition.x > UPPER_BOUNDS) position.x -= UPPER_BOUNDS*2.0;",
+            "if (newPosition.y > UPPER_BOUNDS) position.y -= UPPER_BOUNDS*2.0;",
+            "if (newPosition.z > UPPER_BOUNDS) position.z -= UPPER_BOUNDS*2.0;",
 
             "gl_FragColor=vec4(position + velocity*dt , 1.0);",
 
